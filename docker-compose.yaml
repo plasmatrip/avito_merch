@@ -1,0 +1,51 @@
+services:
+  database:
+    container_name: mecrh_store_db
+    image: postgres:17.2
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U avito_merch -d avito_merch"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: "password"
+      PGDATA: "/var/lib/postgresql/data"
+    volumes:
+      - "./internal/storage/init:/docker-entrypoint-initdb.d"
+      - "mecrh_store:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    networks:
+      - mecrh_store
+    restart: always
+
+  aplication:
+    container_name: merch_store_app
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+      tags:
+        - "merch_store_app:v.1"
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - 8080:8080
+    environment:
+      RUN_ADDRESS: "localhost:8080"
+      DATABASE_URI: "postgres://avito_merch:password@mecrh_store_db:5432/avito_merch?sslmode=disable"
+      LOG_LEVEL: "debug"
+      TOKEN_SECRET: "T0kenS3cRE7"
+    networks:
+      - mecrh_store
+    restart: always
+
+volumes:
+  mecrh_store:
+
+networks:
+  mecrh_store:
+    driver: bridge
