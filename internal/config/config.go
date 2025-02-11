@@ -47,5 +47,9 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.New("LOG_LEVEL not found")
 	}
 
+	if _, exist := os.LookupEnv("TOKEN_SECRET"); !exist {
+		return nil, errors.New("TOKEN_SECRET not found")
+	}
+
 	return cfg, nil
 }

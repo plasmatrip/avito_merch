@@ -1,5 +1,10 @@
 package model
 
+import (
+	"github.com/gofrs/uuid"
+	"github.com/golang-jwt/jwt"
+)
+
 // AuthRequest - запрос на аутентификацию
 type AuthRequest struct {
 	UserName string `json:"username"`
@@ -51,4 +56,15 @@ type Received struct {
 type Sent struct {
 	ToUser string `json:"toUser"`
 	Amount int    `json:"amount"`
+}
+
+// Claims - токен+id пользователя
+type Claims struct {
+	jwt.StandardClaims
+	UserdID uuid.UUID
+}
+
+// ValidLogin - пустая структура для передачи id пользователя
+// в контексте при успешной авторизации
+type ValidLogin struct {
 }

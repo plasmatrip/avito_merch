@@ -9,7 +9,7 @@ import (
 	"github.com/plasmatrip/avito_merch/internal/config"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/router"
-	"github.com/plasmatrip/avito_merch/internal/storage"
+	"github.com/plasmatrip/avito_merch/internal/storage/db"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	defer log.Close()
 
 	// инициализируем подключение к БД
-	db, err := storage.NewRepository(ctx, cfg.Database, *log)
+	db, err := db.NewRepository(ctx, cfg.Database, *log)
 	if err != nil {
 		log.Sugar.Infow("database connection error: ", err)
 		os.Exit(1)

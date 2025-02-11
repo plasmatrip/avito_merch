@@ -23,14 +23,17 @@ func NewRouter(cfg config.Config, log logger.Logger, stor storage.Repository) *c
 	})
 
 	r.Route("/api/info", func(r chi.Router) {
+		r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
 		r.Get("/", handlers.Info)
 	})
 
 	r.Route("/api/sendCoin", func(r chi.Router) {
+		r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
 		r.Post("/", handlers.SendCoin)
 	})
 
 	r.Route("/api/buy/{item}", func(r chi.Router) {
+		r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
 		r.Get("/", handlers.Buy)
 	})
 
