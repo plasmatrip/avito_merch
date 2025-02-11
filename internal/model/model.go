@@ -11,14 +11,14 @@ type AuthRequest struct {
 	Password string `json:"password"`
 }
 
-// Authresponse - ответ на запрос на аутентификацию с токеном
-type Authresponse struct {
+// AuthResponse - ответ на запрос на аутентификацию с токеном
+type AuthResponse struct {
 	Token string `json:"token"`
 }
 
 // SendCoinrequest - отправка монеты
-type SendCoinrequest struct {
-	ToUser string `json:"to_user"`
+type SendCoinRequest struct {
+	ToUser string `json:"toUser"`
 	Amount int    `json:"amount"`
 }
 
@@ -29,9 +29,9 @@ type ErrorResponse struct {
 
 // InfoResponse - информация о монетах, инвентаре и истории транзакций
 type InfoResponse struct {
-	Coins     int         `json:"coins"`
-	Inventory []Inventory `json:"inventory"`
-	CoinHistory
+	Coins       int         `json:"coins"`
+	Inventory   []Inventory `json:"inventory"`
+	CoinHistory CoinHistory `json:"coinHistory"`
 }
 
 // Inventory - информация о товаре

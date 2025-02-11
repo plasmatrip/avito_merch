@@ -84,6 +84,7 @@ func (r PostgresDB) Close() {
 	r.db.Close()
 }
 
+// RegisterUser регистрация пользователя
 func (r PostgresDB) RegisterUser(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error) {
 	h := sha256.New()
 	h.Write([]byte([]byte(userLogin.Password)))
@@ -104,8 +105,9 @@ func (r PostgresDB) RegisterUser(ctx context.Context, userLogin model.AuthReques
 	return id, nil
 }
 
+// BuyItem обработка запороса покупки мерча
 func (r PostgresDB) BuyItem(ctx context.Context, userID uuid.UUID, item string) error {
-	var item_id uuid.NullUUID
+	var item_id uuid.UUID
 	var item_price int
 
 	err := r.db.QueryRow(ctx, queries.SelectItem, pgx.NamedArgs{
@@ -150,162 +152,174 @@ func (r PostgresDB) BuyItem(ctx context.Context, userID uuid.UUID, item string) 
 	return nil
 }
 
-// AddSong добавляет песню
-// func (r Repository) AddSong(ctx context.Context, song model.Song) error {
-// 	ct, err := r.db.Exec(ctx, queries.AddSong, pgx.NamedArgs{
-// 		"group_name":   song.Group,
-// 		"song_name":    song.Song,
-// 		"release_date": time.Time(song.ReleaseDate),
-// 		"lyrics":       song.Text,
-// 		"link":         song.Link,
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
+// SendCoin обработка запороса отправки монет
+func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin model.SendCoinRequest) error {
+	var user_anount int
 
-// 	if ct.RowsAffected() == 0 {
-// 		r.log.Sugar.Debugw("song not added", "group", song.Group, "song", song.Song)
-// 		return errors.New("song not added")
-// 	}
+	//проверяем наличие счета отправителя
+	err := r.db.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+		"user_id": fromUser,
+	}).Scan(&user_anount)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return apperr.ErrSenderNotFound
+		}
+		return err
+	}
 
-// 	return nil
-// }
+	// проверяем баланс у отправителя
+	if user_anount < sendCoin.Amount {
+		return apperr.ErrInsufficientFunds
+	}
 
-// // DeleteSong удаляет песню
-// func (r Repository) DeleteSong(ctx context.Context, song model.Song) error {
-// 	ct, err := r.db.Exec(ctx, queries.DeleteSong, pgx.NamedArgs{
-// 		"group_name": song.Group,
-// 		"song_name":  song.Song,
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
+	var toUser uuid.UUID
+	//проверяем наличие счета получателя
+	err = r.db.QueryRow(ctx, queries.SelectUser, pgx.NamedArgs{
+		"login": sendCoin.ToUser,
+	}).Scan(&toUser)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return apperr.ErrRecipientNotFound
+		}
+		return err
+	}
 
-// 	if ct.RowsAffected() == 0 {
-// 		r.log.Sugar.Debugw("song not deleted", "group", song.Group, "song", song.Song)
-// 		return errors.New("song not deleted")
-// 	}
+	// проверяем, что отправитель и получатель не один пользователь
+	if fromUser == toUser {
+		return apperr.ErrSenderAndRecipientAreTheSame
+	}
 
-// 	return nil
-// }
+	// начинаем транзакцию
+	tx, err := r.db.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite})
+	if err != nil {
+		return err
+	}
 
-// // UpdateSong обновляет песню
-// func (r Repository) UpdateSong(ctx context.Context, song model.Song) error {
-// 	ct, err := r.db.Exec(ctx, queries.UpdateSong, pgx.NamedArgs{
-// 		"group_name":   song.Group,
-// 		"song_name":    song.Song,
-// 		"release_date": song.ReleaseDate.NilIfZero(),
-// 		"lyrics":       song.Text,
-// 		"link":         song.Link,
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
+	// при ошибке коммита откатываем назад
+	defer func() error {
+		return tx.Rollback(ctx)
+	}()
 
-// 	if ct.RowsAffected() == 0 {
-// 		r.log.Sugar.Debugw("song not updated", "group", song.Group, "song", song.Song, "release_date", song.ReleaseDate, "lyrics", song.Text, "link", song.Link)
-// 		return errors.New("song not updated")
-// 	}
+	// обновляем монеты у отправителя
+	_, err = tx.Exec(ctx, queries.UpdateCoin, pgx.NamedArgs{
+		"user_id": fromUser,
+		"amount":  -sendCoin.Amount,
+	})
+	if err != nil {
+		return err
+	}
 
-// 	return nil
-// }
+	// обновляем монеты у получателя
+	_, err = tx.Exec(ctx, queries.UpdateCoin, pgx.NamedArgs{
+		"user_id": toUser,
+		"amount":  sendCoin.Amount,
+	})
+	if err != nil {
+		return err
+	}
 
-// // GetSongs возвращает список песен по фильтру с пагинацией
-// func (r Repository) GetSongs(ctx context.Context, filter *model.Filter) ([]model.Song, error) {
-// 	args := []interface{}{}
-// 	argID := 1
+	// записываем информацию о транзакции
+	_, err = tx.Exec(ctx, queries.InsertTransaction, pgx.NamedArgs{
+		"from_user_id": fromUser,
+		"to_user_id":   toUser,
+		"amount":       sendCoin.Amount,
+	})
+	if err != nil {
+		return err
+	}
 
-// 	var query = queries.SelectSongs
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
 
-// 	if filter.Group != nil {
-// 		query += ` AND group_name ILIKE $` + strconv.Itoa(argID)
-// 		args = append(args, "%"+*filter.Group+"%")
-// 		argID++
-// 	}
-// 	if filter.Song != nil {
-// 		query += ` AND song_name ILIKE $` + strconv.Itoa(argID)
-// 		args = append(args, "%"+*filter.Song+"%")
-// 		argID++
-// 	}
-// 	if filter.ReleaseFrom != nil {
-// 		query += ` AND release_date >= $` + strconv.Itoa(argID)
-// 		args = append(args, *filter.ReleaseFrom)
-// 		argID++
-// 	}
-// 	if filter.ReleaseTo != nil {
-// 		query += ` AND release_date <= $` + strconv.Itoa(argID)
-// 		args = append(args, *filter.ReleaseTo)
-// 		argID++
-// 	}
-// 	if filter.Text != nil {
-// 		query += ` AND lyrics ILIKE $` + strconv.Itoa(argID)
-// 		args = append(args, "%"+*filter.Text+"%")
-// 		argID++
-// 	}
-// 	if filter.Link != nil {
-// 		query += ` AND link ILIKE $` + strconv.Itoa(argID)
-// 		args = append(args, "%"+*filter.Link+"%")
-// 		argID++
-// 	}
+	return nil
+}
 
-// 	query += ` ORDER BY release_date LIMIT $` + strconv.Itoa(argID)
-// 	args = append(args, filter.Limit)
-// 	argID++
-// 	query += ` OFFSET $` + strconv.Itoa(argID)
-// 	args = append(args, filter.Page)
+// Info возвращает информацию о монетах, инвентаре и истории транзакций
+func (r PostgresDB) Info(ctx context.Context, userID uuid.UUID) (model.InfoResponse, error) {
+	var infoResponse model.InfoResponse
 
-// 	rows, err := r.db.Query(ctx, query, args...)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
+	//проверяем наличие счета отправителя
+	err := r.db.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+		"user_id": userID,
+	}).Scan(&infoResponse.Coins)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return infoResponse, apperr.ErrSenderNotFound
+		}
+		return infoResponse, err
+	}
 
-// 	var songs []model.Song
-// 	for rows.Next() {
-// 		var s model.Song
-// 		var rd time.Time
-// 		err := rows.Scan(&s.Group, &s.Song, &rd, &s.Text, &s.Link)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		s.ReleaseDate = model.ReleaseDate(rd)
-// 		songs = append(songs, s)
-// 	}
+	//получаем купленный мерч
+	rows, err := r.db.Query(ctx, queries.SelectPurchases, pgx.NamedArgs{
+		"user_id": userID,
+	})
+	if err != nil {
+		return infoResponse, err
+	}
 
-// 	return songs, nil
-// }
+	for rows.Next() {
+		inventory := model.Inventory{}
 
-// // GetLyrics возвращает текст песни с пагинацией по куплетам
-// // Считаем начало каждого куплета как двойной перевод строки
-// func (r Repository) GetLyrics(ctx context.Context, song model.Song, verseNum int) (model.VerseResponse, error) {
-// 	var verse model.VerseResponse
-// 	var lyrics string
+		err := rows.Scan(
+			&inventory.Type,
+			&inventory.Quantity,
+		)
+		if err != nil {
+			return infoResponse, err
+		}
 
-// 	err := r.db.QueryRow(ctx, queries.SelectSong, pgx.NamedArgs{
-// 		"group": song.Group,
-// 		"song":  song.Song,
-// 	}).Scan(&lyrics)
+		infoResponse.Inventory = append(infoResponse.Inventory, inventory)
+	}
 
-// 	if err != nil {
-// 		r.log.Sugar.Debugw("song not found", "group", song.Group, "song", song.Song, "error", err)
-// 		return verse, err
-// 	}
+	rows.Close()
 
-// 	// Разбиваем на куплеты
-// 	verses := strings.Split(lyrics, "\n\n")
-// 	totalVerses := len(verses)
+	//получаем полученные монеты
+	rows, err = r.db.Query(ctx, queries.SelectRecicedCoins, pgx.NamedArgs{
+		"user_id": userID,
+	})
+	if err != nil {
+		return infoResponse, err
+	}
 
-// 	if verseNum > totalVerses {
-// 		r.log.Sugar.Debugw("verse number out of range", "verse number", verseNum, "group", song.Group, "song", song.Song, "total_verses", totalVerses)
-// 		return verse, errors.New("verse number out of range. total verses: " + strconv.Itoa(totalVerses))
-// 	}
+	for rows.Next() {
+		received := model.Received{}
 
-// 	// Формируем ответ
-// 	verse.Group = song.Group
-// 	verse.Song = song.Song
-// 	verse.Verse = verses[verseNum-1]
-// 	verse.VerseNum = verseNum
-// 	verse.TotalVerses = totalVerses
+		err := rows.Scan(
+			&received.FromUser,
+			&received.Amount,
+		)
+		if err != nil {
+			return infoResponse, err
+		}
 
-// 	return verse, nil
-// }
+		infoResponse.CoinHistory.Received = append(infoResponse.CoinHistory.Received, received)
+	}
+
+	//получаем отправленные монеты
+	rows, err = r.db.Query(ctx, queries.SelectSentCoins, pgx.NamedArgs{
+		"user_id": userID,
+	})
+	if err != nil {
+		return infoResponse, err
+	}
+
+	for rows.Next() {
+		sent := model.Sent{}
+
+		err := rows.Scan(
+			&sent.ToUser,
+			&sent.Amount,
+		)
+		if err != nil {
+			return infoResponse, err
+		}
+
+		infoResponse.CoinHistory.Sent = append(infoResponse.CoinHistory.Sent, sent)
+	}
+
+	rows.Close()
+
+	return infoResponse, nil
+}

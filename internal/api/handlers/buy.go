@@ -22,24 +22,18 @@ func (h *Handlers) Buy(w http.ResponseWriter, r *http.Request) {
 
 		switch err {
 		case apperr.ErrItemNotFound:
-			h.Logger.Sugar.Infow("buy error", "error: ", err)
 			SendErrors(w, "item not found", http.StatusBadRequest)
 		case apperr.ErrInsufficientFunds:
-			h.Logger.Sugar.Infow("buy error", "error: ", err)
 			SendErrors(w, "insufficient funds", http.StatusBadRequest)
 		case apperr.ErrAccountNotFound:
-			h.Logger.Sugar.Infow("buy error", "error: ", err)
 			SendErrors(w, "account not found", http.StatusBadRequest)
 		case apperr.ErrMerchNotBought:
-			h.Logger.Sugar.Infow("buy error", "error: ", err)
 			SendErrors(w, "merch not bought", http.StatusInternalServerError)
 		default:
-			h.Logger.Sugar.Infow("buy error", "error: ", err)
 			SendErrors(w, "buy error", http.StatusInternalServerError)
 		}
 
+		h.Logger.Sugar.Infow("buy error", "error: ", err)
 		return
 	}
-
-	h.Logger.Sugar.Infow("buy request", "userID: ", userID, "body: ", item)
 }

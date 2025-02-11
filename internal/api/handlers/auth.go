@@ -50,7 +50,7 @@ func (h *Handlers) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := model.Authresponse{
+	res := model.AuthResponse{
 		Token: token,
 	}
 
