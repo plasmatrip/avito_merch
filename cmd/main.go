@@ -46,7 +46,10 @@ func main() {
 
 	// запускаем веб-сервер
 	server := http.Server{
-		Addr: cfg.Host,
+		Addr:         cfg.Host,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+		IdleTimeout:  cfg.IdleTimeout,
 		Handler: func(next http.Handler) http.Handler {
 			log.Sugar.Infow("The Avito merch store is running. ", "Server address", cfg.Host)
 			return next

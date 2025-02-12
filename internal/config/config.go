@@ -5,20 +5,35 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
 )
 
+// константы таймаутов
+const (
+	readTimeout  = 5
+	writeTimeout = 10
+	idleTimeout  = 60
+)
+
 type Config struct {
-	Host        string `env:"RUN_ADDRESS"`  //адрес веб-сервера
-	Database    string `env:"DATABASE_URI"` //DSN базы данных
-	LogLevel    string `env:"LOG_LEVEL"`    //уровень логирования
-	TokenSecret string `env:"TOKEN_SECRET"` //секретный ключ для JWT
+	Host         string `env:"RUN_ADDRESS"`  //адрес веб-сервера
+	Database     string `env:"DATABASE_URI"` //DSN базы данных
+	LogLevel     string `env:"LOG_LEVEL"`    //уровень логирования
+	TokenSecret  string `env:"TOKEN_SECRET"` //секретный ключ для JWT
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
 }
 
 func LoadConfig() (*Config, error) {
-	cfg := &Config{}
+	cfg := &Config{
+		ReadTimeout:  readTimeout * time.Second,
+		WriteTimeout: writeTimeout * time.Second,
+		IdleTimeout:  idleTimeout * time.Second,
+	}
 
 	ex, err := os.Executable()
 	if err != nil {

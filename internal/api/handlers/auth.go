@@ -9,6 +9,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
 	"github.com/jackc/pgx/v5/pgconn"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/plasmatrip/avito_merch/internal/model"
 	"github.com/rgurov/pgerrors"
 )
@@ -16,7 +17,7 @@ import (
 func (h *Handlers) Auth(w http.ResponseWriter, r *http.Request) {
 	var req model.AuthRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := jsoniter.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.Logger.Sugar.Infow("error in request handler", "error: ", err)
 		SendErrors(w, err.Error(), http.StatusBadRequest)
 		return

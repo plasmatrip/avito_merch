@@ -58,6 +58,13 @@ type Sent struct {
 	Amount int    `json:"amount"`
 }
 
+// Transaction - транзакция
+type Transaction struct {
+	Login  string `json:"login"`
+	Amount int    `json:"amount"`
+	Type   string `json:"type"`
+}
+
 // Claims - токен+id пользователя
 type Claims struct {
 	jwt.StandardClaims

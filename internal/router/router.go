@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
+	// chimid "github.com/go-chi/chi/v5/middleware"
 	"github.com/plasmatrip/avito_merch/internal/api/handlers"
 	"github.com/plasmatrip/avito_merch/internal/api/middleware"
 	"github.com/plasmatrip/avito_merch/internal/config"
@@ -16,6 +17,7 @@ func NewRouter(cfg config.Config, log logger.Logger, stor storage.Repository) *c
 
 	handlers := handlers.Handlers{Config: cfg, Logger: log, Stor: stor}
 
+	// r.Use(chimid.Logger)
 	r.Use(middleware.WithLogging(log), middleware.WithCompression(log))
 
 	r.Route("/api/auth", func(r chi.Router) {

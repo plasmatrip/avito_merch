@@ -2,6 +2,7 @@ package apperr
 
 import (
 	"errors"
+	"net/http"
 )
 
 var (
@@ -14,4 +15,19 @@ var (
 	ErrSenderNotFound               = errors.New("sender not found")
 	ErrRecipientNotFound            = errors.New("recipient not found")
 	ErrSenderAndRecipientAreTheSame = errors.New("sender and recipient are the same")
+
+	ErrorMessages = map[error]string{
+		ErrItemNotFound:      ErrBadLogin.Error(),
+		ErrInsufficientFunds: ErrInsufficientFunds.Error(),
+		ErrAccountNotFound:   ErrAccountNotFound.Error(),
+		ErrMerchNotBought:    ErrMerchNotBought.Error(),
+		ErrRecipientNotFound: ErrRecipientNotFound.Error(),
+	}
+
+	ErrorStatuses = map[error]int{
+		ErrItemNotFound:      http.StatusBadRequest,
+		ErrInsufficientFunds: http.StatusBadRequest,
+		ErrAccountNotFound:   http.StatusBadRequest,
+		ErrMerchNotBought:    http.StatusInternalServerError,
+	}
 )

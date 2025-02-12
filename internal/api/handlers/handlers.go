@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/plasmatrip/avito_merch/internal/config"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/model"
@@ -28,5 +28,5 @@ func SendErrors(w http.ResponseWriter, error string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	errResponse := model.ErrorResponse{Errors: error}
-	json.NewEncoder(w).Encode(errResponse)
+	jsoniter.NewEncoder(w).Encode(errResponse)
 }

@@ -71,4 +71,17 @@ const (
 		WHERE t.from_user_id = @user_id
 		GROUP BY u.login
 	`
+	SelectTransactions = `
+		SELECT u.login, sum(t.amount)::money::numeric AS amount, 'received' AS type
+			FROM users u 
+			RIGHT JOIN transactions t ON u.id = t.from_user_id 
+			WHERE t.to_user_id = @user_id
+			GROUP BY u.login
+		UNION ALL
+		SELECT u.login, sum(t.amount)::money::numeric AS amount, 'sent' AS type
+			FROM users u 
+			RIGHT JOIN transactions t ON u.id = t.to_user_id 
+			WHERE t.from_user_id = @user_id
+			GROUP BY u.login;
+	`
 )

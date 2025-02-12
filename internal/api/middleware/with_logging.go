@@ -35,9 +35,9 @@ func WithLogging(log logger.Logger) func(next http.Handler) http.Handler {
 	log.Sugar.Debug("handler logging started")
 
 	return func(next http.Handler) http.Handler {
-		start := time.Now()
 
 		fn := func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
 			responseData := &responseData{
 				status: 0,
 				size:   0,
