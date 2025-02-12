@@ -31,21 +31,6 @@ func (h *Handlers) Buy(w http.ResponseWriter, r *http.Request) {
 		SendErrors(w, msg, status)
 		h.Logger.Sugar.Infow("internal error", "error: ", err)
 		return
-		// switch err {
-		// case apperr.ErrItemNotFound:
-		// 	SendErrors(w, "item not found", http.StatusBadRequest)
-		// case apperr.ErrInsufficientFunds:
-		// 	SendErrors(w, "insufficient funds", http.StatusBadRequest)
-		// case apperr.ErrAccountNotFound:
-		// 	SendErrors(w, "account not found", http.StatusBadRequest)
-		// case apperr.ErrMerchNotBought:
-		// 	SendErrors(w, "merch not bought", http.StatusBadRequest)
-		// default:
-		// 	SendErrors(w, "buy error", http.StatusInternalServerError)
-		// }
-
-		// h.Logger.Sugar.Infow("buy error", "error: ", err)
-		// return
 	}
 	w.WriteHeader(http.StatusOK)
 }

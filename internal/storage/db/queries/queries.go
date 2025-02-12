@@ -21,6 +21,10 @@ const (
 	`
 
 	SelectUser = `
+		SELECT id, login, password FROM users WHERE login = @login
+	`
+
+	SelectUserID = `
 		SELECT id FROM users WHERE login = @login
 	`
 

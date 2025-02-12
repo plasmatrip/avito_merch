@@ -25,13 +25,15 @@ func (h *Handlers) Info(w http.ResponseWriter, r *http.Request) {
 		SendErrors(w, msg, status)
 		h.Logger.Sugar.Infow("internal error", "error: ", err)
 		return
+	}
 
-		// h.Logger.Sugar.Infow("info error", "error: ", err)
-		// SendErrors(w, err.Error(), http.StatusInternalServerError)
-		// return
+	err = jsoniter.NewEncoder(w).Encode(infoResponse)
+	if err != nil {
+		h.Logger.Sugar.Infow("error in request handler", "error: ", err)
+		SendErrors(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	jsoniter.NewEncoder(w).Encode(infoResponse)
 }

@@ -33,19 +33,6 @@ func (h *Handlers) SendCoin(w http.ResponseWriter, r *http.Request) {
 		SendErrors(w, msg, status)
 		h.Logger.Sugar.Infow("internal error", "error: ", err)
 		return
-		// switch err {
-		// case apperr.ErrInsufficientFunds:
-		// 	SendErrors(w, err.Error(), http.StatusBadRequest)
-		// case apperr.ErrSenderNotFound:
-		// 	SendErrors(w, err.Error(), http.StatusBadRequest)
-		// case apperr.ErrRecipientNotFound:
-		// 	SendErrors(w, err.Error(), http.StatusBadRequest)
-		// default:
-		// 	SendErrors(w, err.Error(), http.StatusInternalServerError)
-		// }
-
-		// h.Logger.Sugar.Infow("send coin error", "error: ", err)
-		// return
 	}
 	w.WriteHeader(http.StatusOK)
 }

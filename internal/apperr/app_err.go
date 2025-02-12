@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrBadLogin                     = errors.New("bad login or password")
+	ErrUserNotFound                 = errors.New("user not found")
 	ErrLoginAlreadyTaken            = errors.New("login already taken")
 	ErrItemNotFound                 = errors.New("item not found")
 	ErrInsufficientFunds            = errors.New("insufficient funds")
@@ -22,6 +23,7 @@ var (
 		ErrAccountNotFound:   ErrAccountNotFound.Error(),
 		ErrMerchNotBought:    ErrMerchNotBought.Error(),
 		ErrRecipientNotFound: ErrRecipientNotFound.Error(),
+		ErrSenderNotFound:    ErrSenderNotFound.Error(),
 	}
 
 	ErrorStatuses = map[error]int{

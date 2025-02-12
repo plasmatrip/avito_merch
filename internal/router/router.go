@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
-	// chimid "github.com/go-chi/chi/v5/middleware"
+	chimid "github.com/go-chi/chi/v5/middleware"
 	"github.com/plasmatrip/avito_merch/internal/api/handlers"
 	"github.com/plasmatrip/avito_merch/internal/api/middleware"
 	"github.com/plasmatrip/avito_merch/internal/config"
@@ -17,27 +17,30 @@ func NewRouter(cfg config.Config, log logger.Logger, stor storage.Repository) *c
 
 	handlers := handlers.Handlers{Config: cfg, Logger: log, Stor: stor}
 
-	// r.Use(chimid.Logger)
-	r.Use(middleware.WithLogging(log), middleware.WithCompression(log))
+	r.Use(middleware.WithLogging(log), middleware.WithCompression(log), chimid.RedirectSlashes, middleware.WithLimitter(log))
 
-	r.Route("/api/auth", func(r chi.Router) {
-		r.Post("/", handlers.Auth)
-	})
-
-	r.Route("/api/info", func(r chi.Router) {
+	r.Post("/api/auth", handlers.Auth)
+	r.Route("/api", func(r chi.Router) {
 		r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
-		r.Get("/", handlers.Info)
+		r.Get("/info", handlers.Info)
+		r.Post("/sendCoin", handlers.SendCoin)
+		r.Get("/buy/{item}", handlers.Buy)
 	})
 
-	r.Route("/api/sendCoin", func(r chi.Router) {
-		r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
-		r.Post("/", handlers.SendCoin)
-	})
+	// r.Route("/api/info", func(r chi.Router) {
+	// 	r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
+	// 	r.Get("/", handlers.Info)
+	// })
 
-	r.Route("/api/buy/{item}", func(r chi.Router) {
-		r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
-		r.Get("/", handlers.Buy)
-	})
+	// r.Route("/api/sendCoin", func(r chi.Router) {
+	// 	r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
+	// 	r.Post("/", handlers.SendCoin)
+	// })
+
+	// r.Route("/api/buy/{item}", func(r chi.Router) {
+	// 	r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
+	// 	r.Get("/", handlers.Buy)
+	// })
 
 	return r
 }

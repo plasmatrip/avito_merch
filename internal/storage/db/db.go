@@ -15,6 +15,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/plasmatrip/avito_merch/internal/apperr"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/model"
@@ -75,18 +76,19 @@ func startMigration(dsn string) error {
 }
 
 // func generateTransactions(db *pgxpool.Pool) {
-// 	from1, _ := uuid.FromString("a0b8bd72-a2c6-4d37-a841-349feee0a8ba")
-// 	from2, _ := uuid.FromString("ce39d177-7314-4efe-b680-3b6997b8f49f")
-// 	from3, _ := uuid.FromString("5bb43b7b-e75f-45cb-99c8-537c49bde3d5")
-// 	from4, _ := uuid.FromString("defccd78-ffcc-4215-900f-a72c17c072e5")
-// 	from5, _ := uuid.FromString("50cfb64c-0951-4daa-b39a-b7db51684acc")
+// 	from1, _ := uuid.FromString("c10e162a-3759-4a3d-b36f-4c490e4b3c5a")
+// 	from2, _ := uuid.FromString("7bb0fcc6-a318-4898-9563-26e5f55b097c")
+// 	from3, _ := uuid.FromString("facdfcdf-cfa0-4e7f-b128-b1e8f1867305")
+// 	from4, _ := uuid.FromString("a2cb8bd4-0a6e-41b9-9a8a-dcd5112d3b7b")
+// 	from5, _ := uuid.FromString("736080be-2e53-480d-93e1-9f7d78053817")
+
 // 	froms := [5]uuid.UUID{from1, from2, from3, from4, from5}
 
-// 	to1, _ := uuid.FromString("d13178bb-5e41-4518-a576-a9fa888fcbd3")
-// 	to2, _ := uuid.FromString("2dd61419-d1d8-4d5e-83ac-4bf4046b21a8")
-// 	to3, _ := uuid.FromString("652e2962-4264-4460-8bfa-cd18af29c100")
-// 	to4, _ := uuid.FromString("ff3dd987-ad2e-4402-8d7a-1987c6dea5d4")
-// 	to5, _ := uuid.FromString("bb3c6ef1-415b-4ca2-9528-87c58f1f1b2b")
+// 	to1, _ := uuid.FromString("ceb0ebb4-a37f-4a40-ae8b-cdb79f745736")
+// 	to2, _ := uuid.FromString("fd1ab2ee-da28-45ff-8d76-82ddc9428e99")
+// 	to3, _ := uuid.FromString("17359fd4-32cb-4d3c-b504-a96b1484cbb9")
+// 	to4, _ := uuid.FromString("7ba9642b-d519-472c-8674-5e0c3f425492")
+// 	to5, _ := uuid.FromString("b7d922ed-75ed-42a2-aaa9-19c6f7866188")
 // 	tos := [5]uuid.UUID{to1, to2, to3, to4, to5}
 
 // 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -119,21 +121,21 @@ func startMigration(dsn string) error {
 // }
 
 // func geratePurchases(db *pgxpool.Pool) {
-// 	uuid1, _ := uuid.FromString("a0b8bd72-a2c6-4d37-a841-349feee0a8ba")
-// 	uuid2, _ := uuid.FromString("5bb43b7b-e75f-45cb-99c8-537c49bde3d5")
-// 	uuid3, _ := uuid.FromString("ce39d177-7314-4efe-b680-3b6997b8f49f")
+// 	uuid1, _ := uuid.FromString("c10e162a-3759-4a3d-b36f-4c490e4b3c5a")
+// 	uuid2, _ := uuid.FromString("7bb0fcc6-a318-4898-9563-26e5f55b097c")
+// 	uuid3, _ := uuid.FromString("facdfcdf-cfa0-4e7f-b128-b1e8f1867305")
 // 	users := [3]uuid.UUID{uuid1, uuid2, uuid3}
 
-// 	item1, _ := uuid.FromString("d4356121-78a1-42b3-bf5b-d48a7f7173b3")
-// 	item2, _ := uuid.FromString("3399ed21-02d8-4c06-859d-e220f66e5654")
-// 	item3, _ := uuid.FromString("13ade107-8e03-4dbb-9bd3-1c61fe8ea77f")
-// 	item4, _ := uuid.FromString("47cfb7c5-3372-4ef7-a551-4162b3db60ac")
-// 	item5, _ := uuid.FromString("d997a3ab-8164-4b33-b533-266f3e65ca18")
-// 	item6, _ := uuid.FromString("b1aa6642-739a-4af1-8f42-fe7415841989")
-// 	item7, _ := uuid.FromString("74194691-fbde-4a60-b79c-c87626bc5de3")
-// 	item8, _ := uuid.FromString("f9a2c0cd-dca1-4965-a770-43d9c5253deb")
-// 	item9, _ := uuid.FromString("364bac57-2f6f-4d22-9c7f-06fd710f9ca6")
-// 	item10, _ := uuid.FromString("c153167f-7b84-4672-95ae-4ede74f56b46")
+// 	item1, _ := uuid.FromString("abca7783-5c28-48ea-a03b-d5bfc5c36404")
+// 	item2, _ := uuid.FromString("c575884c-6e01-4018-be12-85f68583d958")
+// 	item3, _ := uuid.FromString("4e770e1d-9f8e-4520-a631-31e2d437edca")
+// 	item4, _ := uuid.FromString("83f0ceb6-18f7-468b-85b9-6ee26415b0e4")
+// 	item5, _ := uuid.FromString("c1c1d9f9-ffb2-4eb5-ac38-6127a971269c")
+// 	item6, _ := uuid.FromString("b40b348f-e52f-4278-a18a-d89546017d35")
+// 	item7, _ := uuid.FromString("8f79fe40-3beb-4a43-bd75-bdc765342645")
+// 	item8, _ := uuid.FromString("42c313b9-0cee-46ce-9981-41ea4f1ed5d0")
+// 	item9, _ := uuid.FromString("539d90cb-04e1-4d3e-8a60-bff4ec4a45fb")
+// 	item10, _ := uuid.FromString("8d70045a-47c0-4a5a-a87e-388a36b304fb")
 
 // 	items := [10]uuid.UUID{item1, item2, item3, item4, item5, item6, item7, item8, item9, item10}
 
@@ -162,6 +164,33 @@ func (r PostgresDB) Ping(ctx context.Context) error {
 // Close закрывает подключение к БД
 func (r PostgresDB) Close() {
 	r.db.Close()
+}
+
+func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) {
+	var user model.AuthRequest
+	var userID uuid.UUID
+
+	err := r.db.QueryRow(ctx, queries.SelectUser, pgx.NamedArgs{"login": login.UserName}).Scan(&userID, &user.UserName, &user.Password)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return userID, apperr.ErrBadLogin
+		}
+	}
+
+	// savedHash, err := hex.DecodeString(user.Password)
+	// if err != nil {
+	// 	return userID, err
+	// }
+
+	// h := sha256.New()
+	// h.Write([]byte([]byte(login.Password)))
+	// hash := h.Sum(nil)
+
+	// if user.UserName != login.UserName || !bytes.Equal(hash, savedHash) {
+	// 	return userID, apperr.ErrBadLogin
+	// }
+
+	return userID, nil
 }
 
 // RegisterUser регистрация пользователя
@@ -254,7 +283,7 @@ func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin m
 
 	var toUser uuid.UUID
 	//проверяем наличие счета получателя
-	err = r.db.QueryRow(ctx, queries.SelectUser, pgx.NamedArgs{
+	err = r.db.QueryRow(ctx, queries.SelectUserID, pgx.NamedArgs{
 		"login": sendCoin.ToUser,
 	}).Scan(&toUser)
 	if err != nil {

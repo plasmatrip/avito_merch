@@ -26,7 +26,7 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 }
 
 func (r *loggingResponseWriter) WriteHeader(status int) {
-	r.ResponseWriter.WriteHeader(status)
+	// r.ResponseWriter.WriteHeader(status)
 	r.responseData.status = status
 }
 
@@ -55,7 +55,7 @@ func WithLogging(log logger.Logger) func(next http.Handler) http.Handler {
 
 			switch r.Method {
 			case http.MethodGet:
-				logMsg = append(logMsg, "URI", r.RequestURI, "  METHOD:", r.Method, "  DURATION:", duration)
+				logMsg = append(logMsg, "URI", r.RequestURI, "  METHOD:", r.Method, "  DURATION:", duration, "  STATUS", responseData.status, "  SIZE", responseData.size)
 			case http.MethodPost:
 				logMsg = append(logMsg, "URI", r.RequestURI, "  METHOD:", r.Method,
 					"  DURATION:", duration, "  STATUS", responseData.status, "  SIZE", responseData.size)
