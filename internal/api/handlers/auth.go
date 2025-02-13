@@ -10,7 +10,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/jackc/pgx/v5/pgconn"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/plasmatrip/avito_merch/internal/apperr"
 	"github.com/plasmatrip/avito_merch/internal/model"
 	"github.com/rgurov/pgerrors"
 )
@@ -33,29 +32,44 @@ func (h *Handlers) Auth(w http.ResponseWriter, r *http.Request) {
 	var id uuid.UUID
 
 	// проверка наличия пользователя
-	id, err := h.Stor.FindUser(r.Context(), req)
+	// id, err := h.Stor.FindUser(r.Context(), req)
+	// if err != nil {
+	// 	if !errors.Is(err, apperr.ErrUserNotFound) {
+	// 		h.Logger.Sugar.Infow("authentication error", "error: ", err)
+	// 		SendErrors(w, "authentication error", http.StatusUnauthorized)
+	// 		return
+	// 	}
+
+	// 	// регистрация пользователя, если не нашли
+	// 	id, err = h.Stor.RegisterUser(r.Context(), req)
+	// 	if err != nil {
+	// 		if pgErr, ok := err.(*pgconn.PgError); ok {
+	// 			if pgErr.Code == pgerrors.UniqueViolation {
+	// 				h.Logger.Sugar.Infow("authentication error", "error: ", err)
+	// 				SendErrors(w, "authentication error", http.StatusConflict)
+	// 				return
+	// 			}
+	// 		}
+
+	// 		h.Logger.Sugar.Infow("internal error", "error: ", err)
+	// 		SendErrors(w, "internal server error", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }
+
+	id, err := h.Stor.UserAuth(r.Context(), req)
 	if err != nil {
-		if !errors.Is(err, apperr.ErrUserNotFound) {
-			h.Logger.Sugar.Infow("authentication error", "error: ", err)
-			SendErrors(w, "authentication error", http.StatusUnauthorized)
-			return
-		}
-
-		// регистрация пользователя, если не нашли
-		id, err = h.Stor.RegisterUser(r.Context(), req)
-		if err != nil {
-			if pgErr, ok := err.(*pgconn.PgError); ok {
-				if pgErr.Code == pgerrors.UniqueViolation {
-					h.Logger.Sugar.Infow("authentication error", "error: ", err)
-					SendErrors(w, "authentication error", http.StatusConflict)
-					return
-				}
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			if pgErr.Code == pgerrors.UniqueViolation {
+				h.Logger.Sugar.Infow("authentication error", "error: ", err)
+				SendErrors(w, "authentication error", http.StatusConflict)
+				return
 			}
-
-			h.Logger.Sugar.Infow("internal error", "error: ", err)
-			SendErrors(w, "internal server error", http.StatusInternalServerError)
-			return
 		}
+
+		h.Logger.Sugar.Infow("internal error", "error: ", err)
+		SendErrors(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	token, err := h.LoginToken(id, req)

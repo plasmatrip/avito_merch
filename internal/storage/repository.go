@@ -10,8 +10,7 @@ import (
 
 type Repository interface {
 	Ping(ctx context.Context) error
-	RegisterUser(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error)
-	FindUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error)
+	UserAuth(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error)
 	BuyItem(ctx context.Context, userID uuid.UUID, item string) error
 	SendCoin(ctx context.Context, fromUser uuid.UUID, userSendCoin model.SendCoinRequest) error
 	Info(ctx context.Context, userID uuid.UUID) (model.InfoResponse, error)

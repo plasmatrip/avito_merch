@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/plasmatrip/avito_merch/internal/api/handlers"
 	"github.com/plasmatrip/avito_merch/internal/config"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/router"
@@ -53,7 +54,7 @@ func main() {
 		Handler: func(next http.Handler) http.Handler {
 			log.Sugar.Infow("The Avito merch store is running. ", "Server address", cfg.Host)
 			return next
-		}(router.NewRouter(*cfg, *log, *db)),
+		}(router.NewRouter(*cfg, *log, *db, handlers.NewHandlers(*cfg, *log, *db))),
 	}
 
 	go server.ListenAndServe()

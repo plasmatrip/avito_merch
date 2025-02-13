@@ -19,8 +19,19 @@ import (
 	"github.com/plasmatrip/avito_merch/internal/apperr"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/model"
+
 	"github.com/plasmatrip/avito_merch/internal/storage/db/queries"
 )
+
+//go:generate mockgen -source=db.go -destination=mock/db.go
+
+type DB interface {
+	Ping(ctx context.Context) error
+	UserAuth(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error)
+	BuyItem(ctx context.Context, userID uuid.UUID, item string) error
+	SendCoin(ctx context.Context, fromUser uuid.UUID, userSendCoin model.SendCoinRequest) error
+	Info(ctx context.Context, userID uuid.UUID) (model.InfoResponse, error)
+}
 
 type PostgresDB struct {
 	db  *pgxpool.Pool
@@ -166,7 +177,8 @@ func (r PostgresDB) Close() {
 	r.db.Close()
 }
 
-func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) {
+// func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) {
+func (r PostgresDB) findUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) {
 	var user model.AuthRequest
 	var userID uuid.UUID
 
@@ -177,6 +189,7 @@ func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid
 		}
 	}
 
+	// TODO: восстановление пароля
 	// savedHash, err := hex.DecodeString(user.Password)
 	// if err != nil {
 	// 	return userID, err
@@ -193,15 +206,20 @@ func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid
 	return userID, nil
 }
 
-// RegisterUser регистрация пользователя
-func (r PostgresDB) RegisterUser(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error) {
+// UserAuth проверка аутентификационных данных, в случае отсутсвия пользователя - регистрация
+func (r PostgresDB) UserAuth(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error) {
+	userID, err := r.findUser(ctx, userLogin)
+	if err == nil {
+		return userID, nil
+	}
+
 	h := sha256.New()
 	h.Write([]byte([]byte(userLogin.Password)))
 	hash := hex.EncodeToString(h.Sum(nil))
 
 	var id uuid.UUID
 
-	err := r.db.QueryRow(ctx, queries.InsertUser, pgx.NamedArgs{
+	err = r.db.QueryRow(ctx, queries.InsertUser, pgx.NamedArgs{
 		"date":     time.Now(),
 		"login":    userLogin.UserName,
 		"password": hash,
