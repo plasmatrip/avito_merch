@@ -34,8 +34,8 @@ type DB interface {
 }
 
 type PostgresDB struct {
-	db  *pgxpool.Pool
-	log logger.Logger
+	DB  *pgxpool.Pool
+	Log logger.Logger
 }
 
 func NewRepository(ctx context.Context, dsn string, log logger.Logger) (*PostgresDB, error) {
@@ -53,13 +53,14 @@ func NewRepository(ctx context.Context, dsn string, log logger.Logger) (*Postgre
 
 	// открываем БД
 	db, err := pgxpool.New(ctx, dsn)
+
 	if err != nil {
 		return nil, err
 	}
 
 	return &PostgresDB{
-		db:  db,
-		log: log,
+		DB:  db,
+		Log: log,
 	}, nil
 }
 
@@ -169,12 +170,12 @@ func startMigration(dsn string) error {
 
 // Ping проверяет подключение к БД
 func (r PostgresDB) Ping(ctx context.Context) error {
-	return r.db.Ping(ctx)
+	return r.DB.Ping(ctx)
 }
 
 // Close закрывает подключение к БД
 func (r PostgresDB) Close() {
-	r.db.Close()
+	r.DB.Close()
 }
 
 // func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) {
@@ -182,7 +183,7 @@ func (r PostgresDB) findUser(ctx context.Context, login model.AuthRequest) (uuid
 	var user model.AuthRequest
 	var userID uuid.UUID
 
-	err := r.db.QueryRow(ctx, queries.SelectUser, pgx.NamedArgs{"login": login.UserName}).Scan(&userID, &user.UserName, &user.Password)
+	err := r.DB.QueryRow(ctx, queries.SelectUser, pgx.NamedArgs{"login": login.UserName}).Scan(&userID, &user.UserName, &user.Password)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return userID, apperr.ErrBadLogin
@@ -219,7 +220,7 @@ func (r PostgresDB) UserAuth(ctx context.Context, userLogin model.AuthRequest) (
 
 	var id uuid.UUID
 
-	err = r.db.QueryRow(ctx, queries.InsertUser, pgx.NamedArgs{
+	err = r.DB.QueryRow(ctx, queries.InsertUser, pgx.NamedArgs{
 		"date":     time.Now(),
 		"login":    userLogin.UserName,
 		"password": hash,
@@ -237,7 +238,7 @@ func (r PostgresDB) BuyItem(ctx context.Context, userID uuid.UUID, item string) 
 	var item_id uuid.UUID
 	var item_price int
 
-	err := r.db.QueryRow(ctx, queries.SelectItem, pgx.NamedArgs{
+	err := r.DB.QueryRow(ctx, queries.SelectItem, pgx.NamedArgs{
 		"item_name": item,
 	}).Scan(&item_id, &item_price)
 	if err != nil {
@@ -248,7 +249,7 @@ func (r PostgresDB) BuyItem(ctx context.Context, userID uuid.UUID, item string) 
 	}
 
 	var user_anount int
-	err = r.db.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+	err = r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
 		"user_id": userID,
 	}).Scan(&user_anount)
 	if err != nil {
@@ -262,7 +263,7 @@ func (r PostgresDB) BuyItem(ctx context.Context, userID uuid.UUID, item string) 
 		return apperr.ErrInsufficientFunds
 	}
 
-	ct, err := r.db.Exec(ctx, queries.BuyItem, pgx.NamedArgs{
+	ct, err := r.DB.Exec(ctx, queries.BuyItem, pgx.NamedArgs{
 		"user_id":   userID,
 		"item_name": item,
 		"price":     item_price,
@@ -284,7 +285,7 @@ func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin m
 	var user_anount int
 
 	//проверяем наличие счета отправителя
-	err := r.db.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+	err := r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
 		"user_id": fromUser,
 	}).Scan(&user_anount)
 	if err != nil {
@@ -301,7 +302,7 @@ func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin m
 
 	var toUser uuid.UUID
 	//проверяем наличие счета получателя
-	err = r.db.QueryRow(ctx, queries.SelectUserID, pgx.NamedArgs{
+	err = r.DB.QueryRow(ctx, queries.SelectUserID, pgx.NamedArgs{
 		"login": sendCoin.ToUser,
 	}).Scan(&toUser)
 	if err != nil {
@@ -317,7 +318,7 @@ func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin m
 	}
 
 	// начинаем транзакцию
-	tx, err := r.db.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite})
+	tx, err := r.DB.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite})
 	if err != nil {
 		return err
 	}
@@ -368,7 +369,7 @@ func (r PostgresDB) Info(ctx context.Context, userID uuid.UUID) (model.InfoRespo
 	var infoResponse model.InfoResponse
 
 	//проверяем наличие счета отправителя
-	err := r.db.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+	err := r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
 		"user_id": userID,
 	}).Scan(&infoResponse.Coins)
 	if err != nil {
@@ -379,7 +380,7 @@ func (r PostgresDB) Info(ctx context.Context, userID uuid.UUID) (model.InfoRespo
 	}
 
 	//получаем купленный мерч
-	rows, err := r.db.Query(ctx, queries.SelectPurchases, pgx.NamedArgs{
+	rows, err := r.DB.Query(ctx, queries.SelectPurchases, pgx.NamedArgs{
 		"user_id": userID,
 	})
 	if err != nil {
@@ -403,7 +404,7 @@ func (r PostgresDB) Info(ctx context.Context, userID uuid.UUID) (model.InfoRespo
 	rows.Close()
 
 	// получаем историю транзакций
-	rows, err = r.db.Query(ctx, queries.SelectTransactions, pgx.NamedArgs{
+	rows, err = r.DB.Query(ctx, queries.SelectTransactions, pgx.NamedArgs{
 		"user_id": userID,
 	})
 	if err != nil {
