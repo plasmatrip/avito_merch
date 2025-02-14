@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/plasmatrip/avito_merch/internal/api/handlers"
 	"github.com/plasmatrip/avito_merch/internal/config"
@@ -15,7 +16,7 @@ import (
 
 func main() {
 	// для грейсфул шатдауна слушаем сигнал ОС
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
 	// загружаем конфиг
