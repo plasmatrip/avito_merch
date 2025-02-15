@@ -16,13 +16,13 @@
 - **pgx** — драйвер для PostgreSQL
 - **chi** — роутер
 - **Docker Compose** — контейнеризация и оркестрация
-- **Testconteiners** - для проведения тестирования
+- **Testcontainers** - для проведения тестирования
 
 ## Запуск проекта с помощью Docker Compose
 
 ### Предварительные требования
 
-- Docker и Docker Compose установлены в системе
+- Docker и Docker Compose должны быть установлены в системе
 
 ### Шаги для запуска
 
@@ -52,6 +52,7 @@
 - `internal/storage/db/init_test` — bash-скрипт создания тестовой базы данных с помощью библтотеки Testcontainers
 - `internal/storage/db/migrations` — миграции базы данных
 - `docker-compose.yml` — конфигурация Docker Compose
+- `bombardier_test.txt` - файл с результатами тестирования сервиса с помощью утилиты Bombardier
 
 ## API Эндпоинты
 
@@ -65,6 +66,8 @@
 go test -v ./... -coverprofile=cover.out -covermode=atomic
 go tool cover -html cover.out -o cover.html
 ```
+
+Откройте в браузере файл cover.html для более удобного просмотра процента покрытия кода тестами
 
 ## Контакты
 
