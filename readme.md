@@ -63,7 +63,7 @@
 ## Тестирование
 
 ```bash
-go test -v ./... -coverprofile=cover.out -covermode=atomic
+go test -v ./... -race -coverprofile=cover.out -covermode=atomic
 go tool cover -html cover.out -o cover.html
 ```
 
