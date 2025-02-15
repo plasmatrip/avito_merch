@@ -22,28 +22,6 @@ services:
       - mecrh_store
     restart: always
 
-  # test_db:
-  #   container_name: mecrh_store_test_db
-  #   image: postgres:17.2
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U test_avito_merch -d test_avito_merch"]
-  #     interval: 10s
-  #     retries: 5
-  #     start_period: 30s
-  #     timeout: 10s
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_DB: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     PGDATA: "/var/lib/postgresql/data"
-  #   volumes:
-  #     - "./internal/storage/db/init_test:/docker-entrypoint-initdb.d"
-  #     - "mecrh_store:/var/lib/postgresql/test_data"
-  #   ports:
-  #     - "5433:5432"
-  #   networks:
-  #     - mecrh_store
-
   aplication:
     container_name: merch_store_app
     build:

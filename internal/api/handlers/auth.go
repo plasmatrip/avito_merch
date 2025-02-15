@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/jackc/pgx/v5/pgconn"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/plasmatrip/avito_merch/internal/apperr"
 	"github.com/plasmatrip/avito_merch/internal/model"
 	"github.com/rgurov/pgerrors"
 )
@@ -19,13 +20,13 @@ func (h *Handlers) Auth(w http.ResponseWriter, r *http.Request) {
 
 	if err := jsoniter.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.Logger.Sugar.Infow("error in request handler", "error: ", err)
-		SendErrors(w, err.Error(), http.StatusBadRequest)
+		SendErrors(w, apperr.ErrBadJSON)
 		return
 	}
 
 	if len(req.UserName) == 0 || len(req.Password) == 0 {
 		h.Logger.Sugar.Infow("error in authentication data", "error: ", errors.New("empty login or password"))
-		SendErrors(w, "empty login or password", http.StatusBadRequest)
+		SendErrors(w, apperr.ErrEmptyLoginOrPassword)
 		return
 	}
 
@@ -34,26 +35,26 @@ func (h *Handlers) Auth(w http.ResponseWriter, r *http.Request) {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgErr.Code == pgerrors.UniqueViolation {
 				h.Logger.Sugar.Infow("authentication error", "error: ", err)
-				SendErrors(w, "authentication error", http.StatusConflict)
+				SendErrors(w, apperr.ErrAuthenticationError)
 				return
 			}
 		}
 
 		h.Logger.Sugar.Infow("internal error", "error: ", err)
-		SendErrors(w, "internal server error", http.StatusInternalServerError)
+		SendErrors(w, err)
 		return
 	}
 
 	token, err := h.Token(id, req)
 	if err != nil {
 		h.Logger.Sugar.Infow("error generating JWT", "error: ", err)
-		SendErrors(w, "internal server error", http.StatusInternalServerError)
+		SendErrors(w, err)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(model.AuthResponse{Token: token}); err != nil {
 		h.Logger.Sugar.Infow("error encoding response", "error: ", err)
-		SendErrors(w, "internal server error", http.StatusInternalServerError)
+		SendErrors(w, err)
 		return
 	}
 

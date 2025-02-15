@@ -1,0 +1,1316 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>cmd: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/plasmatrip/avito_merch/cmd/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/plasmatrip/avito_merch/internal/api/handlers/auth.go (0.0%)</option>
+				
+				<option value="file2">github.com/plasmatrip/avito_merch/internal/api/handlers/buy.go (72.2%)</option>
+				
+				<option value="file3">github.com/plasmatrip/avito_merch/internal/api/handlers/handlers.go (80.0%)</option>
+				
+				<option value="file4">github.com/plasmatrip/avito_merch/internal/api/handlers/info.go (73.7%)</option>
+				
+				<option value="file5">github.com/plasmatrip/avito_merch/internal/api/handlers/send_coin.go (80.8%)</option>
+				
+				<option value="file6">github.com/plasmatrip/avito_merch/internal/api/middleware/with_authentication.go (0.0%)</option>
+				
+				<option value="file7">github.com/plasmatrip/avito_merch/internal/api/middleware/with_compression.go (0.0%)</option>
+				
+				<option value="file8">github.com/plasmatrip/avito_merch/internal/api/middleware/with_limitter.go (0.0%)</option>
+				
+				<option value="file9">github.com/plasmatrip/avito_merch/internal/api/middleware/with_logging.go (0.0%)</option>
+				
+				<option value="file10">github.com/plasmatrip/avito_merch/internal/config/config.go (0.0%)</option>
+				
+				<option value="file11">github.com/plasmatrip/avito_merch/internal/logger/logger.go (90.0%)</option>
+				
+				<option value="file12">github.com/plasmatrip/avito_merch/internal/router/router.go (0.0%)</option>
+				
+				<option value="file13">github.com/plasmatrip/avito_merch/internal/storage/db/db.go (75.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "context"
+        "net/http"
+        "os"
+        "os/signal"
+        "syscall"
+
+        "github.com/plasmatrip/avito_merch/internal/api/handlers"
+        "github.com/plasmatrip/avito_merch/internal/config"
+        "github.com/plasmatrip/avito_merch/internal/logger"
+        "github.com/plasmatrip/avito_merch/internal/router"
+        "github.com/plasmatrip/avito_merch/internal/storage/db"
+)
+
+func main() <span class="cov0" title="0">{
+        // для грейсфул шатдауна слушаем сигнал ОС
+        ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+        defer stop()
+
+        // загружаем конфиг
+        cfg, err := config.LoadConfig()
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+
+        // инициализируем логгер
+        <span class="cov0" title="0">log, err := logger.NewLogger(cfg.LogLevel)
+        if err != nil </span><span class="cov0" title="0">{
+                panic(err)</span>
+        }
+        <span class="cov0" title="0">defer log.Close()
+
+        // инициализируем подключение к БД
+        db, err := db.NewRepository(ctx, cfg.Database, *log)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Sugar.Infow("database connection error: ", err)
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">defer db.Close()
+
+        //пингуем базу
+        if err := db.Ping(ctx); err != nil </span><span class="cov0" title="0">{
+                log.Sugar.Infow("database connection error: ", err)
+                os.Exit(1)
+        }</span>
+
+        // запускаем веб-сервер
+        <span class="cov0" title="0">server := http.Server{
+                Addr:         cfg.Host,
+                ReadTimeout:  cfg.ReadTimeout,
+                WriteTimeout: cfg.WriteTimeout,
+                IdleTimeout:  cfg.IdleTimeout,
+                Handler: func(next http.Handler) http.Handler </span><span class="cov0" title="0">{
+                        log.Sugar.Infow("The Avito merch store is running. ", "Server address", cfg.Host)
+                        return next
+                }</span>(router.NewRouter(*cfg, *log, *db, handlers.NewHandlers(*cfg, *log, *db))),
+        }
+
+        <span class="cov0" title="0">go server.ListenAndServe()
+
+        // ждем сигнал ОС
+        &lt;-ctx.Done()
+
+        server.Shutdown(context.Background())
+
+        log.Sugar.Infow("The server has been shut down gracefully")
+
+        os.Exit(0)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handlers
+
+import (
+        "encoding/json"
+        "errors"
+        "net/http"
+        "time"
+
+        "github.com/gofrs/uuid"
+        "github.com/golang-jwt/jwt"
+        "github.com/jackc/pgx/v5/pgconn"
+        jsoniter "github.com/json-iterator/go"
+        "github.com/plasmatrip/avito_merch/internal/model"
+        "github.com/rgurov/pgerrors"
+)
+
+func (h *Handlers) Auth(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var req model.AuthRequest
+
+        if err := jsoniter.NewDecoder(r.Body).Decode(&amp;req); err != nil </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infow("error in request handler", "error: ", err)
+                SendErrors(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if len(req.UserName) == 0 || len(req.Password) == 0 </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infow("error in authentication data", "error: ", errors.New("empty login or password"))
+                SendErrors(w, "empty login or password", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">id, err := h.Stor.UserAuth(r.Context(), req)
+        if err != nil </span><span class="cov0" title="0">{
+                if pgErr, ok := err.(*pgconn.PgError); ok </span><span class="cov0" title="0">{
+                        if pgErr.Code == pgerrors.UniqueViolation </span><span class="cov0" title="0">{
+                                h.Logger.Sugar.Infow("authentication error", "error: ", err)
+                                SendErrors(w, "authentication error", http.StatusConflict)
+                                return
+                        }</span>
+                }
+
+                <span class="cov0" title="0">h.Logger.Sugar.Infow("internal error", "error: ", err)
+                SendErrors(w, "internal server error", http.StatusInternalServerError)
+                return</span>
+        }
+
+        <span class="cov0" title="0">token, err := h.Token(id, req)
+        if err != nil </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infow("error generating JWT", "error: ", err)
+                SendErrors(w, "internal server error", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">if err := json.NewEncoder(w).Encode(model.AuthResponse{Token: token}); err != nil </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infow("error encoding response", "error: ", err)
+                SendErrors(w, "internal server error", http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov0" title="0">w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)</span>
+}
+
+func (h *Handlers) Token(id uuid.UUID, lr model.AuthRequest) (string, error) <span class="cov0" title="0">{
+        claims := model.Claims{
+                StandardClaims: jwt.StandardClaims{
+                        ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
+                        Subject:   lr.UserName,
+                },
+                UserdID: id,
+        }
+
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+        t, err := token.SignedString([]byte(h.Config.TokenSecret))
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov0" title="0">return t, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        "github.com/plasmatrip/avito_merch/internal/apperr"
+        "github.com/plasmatrip/avito_merch/internal/model"
+)
+
+func (h *Handlers) Buy(w http.ResponseWriter, r *http.Request) <span class="cov10" title="2">{
+        userID := r.Context().Value(model.ValidLogin{}).(*model.Claims).UserdID
+
+        item := r.PathValue("item")
+        if len(item) == 0 </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infoln("Merch name is empty")
+                SendErrors(w, "Merch name is empty", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov10" title="2">err := h.Stor.BuyItem(r.Context(), userID, item)
+        if err != nil </span><span class="cov1" title="1">{
+                msg, ok := apperr.ErrorMessages[err]
+                if !ok </span><span class="cov0" title="0">{
+                        msg = "internal error"
+                }</span>
+                <span class="cov1" title="1">status, ok := apperr.ErrorStatuses[err]
+                if !ok </span><span class="cov0" title="0">{
+                        status = http.StatusInternalServerError
+                }</span>
+
+                <span class="cov1" title="1">SendErrors(w, msg, status)
+                h.Logger.Sugar.Infow("internal error", "error: ", err)
+                return</span>
+        }
+        <span class="cov1" title="1">w.WriteHeader(http.StatusOK)</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        jsoniter "github.com/json-iterator/go"
+        "github.com/plasmatrip/avito_merch/internal/config"
+        "github.com/plasmatrip/avito_merch/internal/logger"
+        "github.com/plasmatrip/avito_merch/internal/model"
+        "github.com/plasmatrip/avito_merch/internal/storage"
+)
+
+type Handlers struct {
+        Config config.Config
+        Logger logger.Logger
+        Stor   storage.Repository
+}
+
+func NewHandlers(cfg config.Config, l logger.Logger, db storage.Repository) *Handlers <span class="cov0" title="0">{
+        return &amp;Handlers{
+                Config: cfg,
+                Logger: l,
+                Stor:   db,
+        }
+}</span>
+
+func SendErrors(w http.ResponseWriter, error string, statusCode int) <span class="cov10" title="7">{
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(statusCode)
+        errResponse := model.ErrorResponse{Errors: error}
+        jsoniter.NewEncoder(w).Encode(errResponse)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        jsoniter "github.com/json-iterator/go"
+        "github.com/plasmatrip/avito_merch/internal/apperr"
+        "github.com/plasmatrip/avito_merch/internal/model"
+)
+
+func (h *Handlers) Info(w http.ResponseWriter, r *http.Request) <span class="cov10" title="2">{
+        userID := r.Context().Value(model.ValidLogin{}).(*model.Claims).UserdID
+
+        infoResponse, err := h.Stor.Info(r.Context(), userID)
+        if err != nil </span><span class="cov1" title="1">{
+                msg, ok := apperr.ErrorMessages[err]
+                if !ok </span><span class="cov0" title="0">{
+                        msg = "internal error"
+                }</span>
+                <span class="cov1" title="1">status, ok := apperr.ErrorStatuses[err]
+                if !ok </span><span class="cov0" title="0">{
+                        status = http.StatusInternalServerError
+                }</span>
+
+                <span class="cov1" title="1">SendErrors(w, msg, status)
+                h.Logger.Sugar.Infow("internal error", "error: ", err)
+                return</span>
+        }
+
+        <span class="cov1" title="1">err = jsoniter.NewEncoder(w).Encode(infoResponse)
+        if err != nil </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infow("error in request handler", "error: ", err)
+                SendErrors(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov1" title="1">w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package handlers
+
+import (
+        "net/http"
+
+        jsoniter "github.com/json-iterator/go"
+        "github.com/plasmatrip/avito_merch/internal/apperr"
+        "github.com/plasmatrip/avito_merch/internal/model"
+)
+
+func (h *Handlers) SendCoin(w http.ResponseWriter, r *http.Request) <span class="cov10" title="6">{
+        var sc model.SendCoinRequest
+
+        if err := jsoniter.NewDecoder(r.Body).Decode(&amp;sc); err != nil </span><span class="cov0" title="0">{
+                h.Logger.Sugar.Infow("error in request handler", "error: ", err)
+                SendErrors(w, err.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov10" title="6">if len(sc.ToUser) == 0 &amp;&amp; sc.Amount == 0 </span><span class="cov1" title="1">{
+                h.Logger.Sugar.Infow("error in request handler", "error: ", apperr.ErrBadJSON)
+                SendErrors(w, apperr.ErrBadJSON.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov9" title="5">if sc.Amount &lt;= 0 </span><span class="cov1" title="1">{
+                h.Logger.Sugar.Infow("error in request handler", "error: ", apperr.ErrAmonutIsLessThanOrEqualToZero)
+                SendErrors(w, apperr.ErrAmonutIsLessThanOrEqualToZero.Error(), http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov7" title="4">userID := r.Context().Value(model.ValidLogin{}).(*model.Claims).UserdID
+
+        err := h.Stor.SendCoin(r.Context(), userID, sc)
+        if err != nil </span><span class="cov6" title="3">{
+                msg, ok := apperr.ErrorMessages[err]
+                if !ok </span><span class="cov0" title="0">{
+                        msg = "internal error"
+                }</span>
+                <span class="cov6" title="3">status, ok := apperr.ErrorStatuses[err]
+                if !ok </span><span class="cov0" title="0">{
+                        status = http.StatusInternalServerError
+                }</span>
+
+                <span class="cov6" title="3">SendErrors(w, msg, status)
+                h.Logger.Sugar.Infow("internal error", "error: ", err)
+                return</span>
+        }
+        <span class="cov1" title="1">w.WriteHeader(http.StatusOK)</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package middleware
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+        "strings"
+
+        "github.com/golang-jwt/jwt"
+        "github.com/plasmatrip/avito_merch/internal/api/handlers"
+        "github.com/plasmatrip/avito_merch/internal/logger"
+        "github.com/plasmatrip/avito_merch/internal/model"
+)
+
+func WithAuthentication(log logger.Logger, tokenSecret string) func(next http.Handler) http.Handler <span class="cov0" title="0">{
+        return func(next http.Handler) http.Handler </span><span class="cov0" title="0">{
+                fn := func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                        authHeader := r.Header.Get("Authorization")
+                        if authHeader == "" </span><span class="cov0" title="0">{
+                                log.Sugar.Info("missing authorization header")
+                                handlers.SendErrors(w, "missing authorization header", http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">parts := strings.Split(authHeader, " ")
+                        if len(parts) != 2 || parts[0] != "Bearer" </span><span class="cov0" title="0">{
+                                log.Sugar.Infow("invalid authorization header format", "parts", parts)
+                                handlers.SendErrors(w, "invalid authorization header format", http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">tokenString := parts[1]
+
+                        claims := &amp;model.Claims{}
+
+                        token, err := jwt.ParseWithClaims(tokenString, claims,
+                                func(t *jwt.Token) (interface{}, error) </span><span class="cov0" title="0">{
+                                        if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok </span><span class="cov0" title="0">{
+                                                return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+                                        }</span>
+                                        <span class="cov0" title="0">return []byte(tokenSecret), nil</span>
+                                })
+
+                        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+                                log.Sugar.Infow("JWT token error", "error", err)
+                                handlers.SendErrors(w, "JWT token error", http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">if !token.Valid </span><span class="cov0" title="0">{
+                                log.Sugar.Infow("invalid token", "token", token)
+                                handlers.SendErrors(w, "invalid token", http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">ctx := context.WithValue(r.Context(), model.ValidLogin{}, claims)
+
+                        next.ServeHTTP(w, r.WithContext(ctx))</span>
+                }
+                <span class="cov0" title="0">return http.HandlerFunc(fn)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package middleware
+
+import (
+        "compress/gzip"
+        "io"
+        "net/http"
+        "strings"
+
+        "github.com/plasmatrip/avito_merch/internal/logger"
+)
+
+type compressWriter struct {
+        w  http.ResponseWriter
+        zw *gzip.Writer
+}
+
+func newCompressWriter(w http.ResponseWriter) *compressWriter <span class="cov0" title="0">{
+        w.Header().Set("Content-Encoding", "gzip")
+        return &amp;compressWriter{
+                w:  w,
+                zw: gzip.NewWriter(w),
+        }
+}</span>
+
+func (c *compressWriter) Header() http.Header <span class="cov0" title="0">{
+        return c.w.Header()
+}</span>
+
+func (c *compressWriter) Write(data []byte) (int, error) <span class="cov0" title="0">{
+        return c.zw.Write(data)
+}</span>
+
+func (c *compressWriter) WriteHeader(statusCode int) <span class="cov0" title="0">{
+        c.w.Header().Set("Content-Encoding", "gzip")
+        c.w.WriteHeader(statusCode)
+}</span>
+
+func (c *compressWriter) Close() error <span class="cov0" title="0">{
+        return c.zw.Close()
+}</span>
+
+type compressReader struct {
+        r  io.ReadCloser
+        zr *gzip.Reader
+}
+
+func newCompressReader(r io.ReadCloser) (*compressReader, error) <span class="cov0" title="0">{
+        zr, err := gzip.NewReader(r)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">return &amp;compressReader{
+                r:  r,
+                zr: zr,
+        }, nil</span>
+}
+
+func (c *compressReader) Read(data []byte) (int, error) <span class="cov0" title="0">{
+        return c.zr.Read(data)
+}</span>
+
+func (c *compressReader) Close() error <span class="cov0" title="0">{
+        if err := c.r.Close(); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return c.zr.Close()</span>
+}
+
+// WithCompression устанавливает сжатие
+func WithCompression(log logger.Logger) func(next http.Handler) http.Handler <span class="cov0" title="0">{
+        log.Sugar.Debug("compression started")
+
+        return func(next http.Handler) http.Handler </span><span class="cov0" title="0">{
+                fn := func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                        // Устанавливаем сжатие
+                        ow := w
+                        acceptEncoding := r.Header.Get("Accept-Encoding")
+                        supportGzip := strings.Contains(acceptEncoding, "gzip")
+                        if supportGzip </span><span class="cov0" title="0">{
+                                cw := newCompressWriter(w)
+                                defer func() </span><span class="cov0" title="0">{
+                                        if err := cw.Close(); err != nil </span><span class="cov0" title="0">{
+                                                log.Sugar.Infow("failed to close compress writer", "error", err)
+                                        }</span>
+                                }()
+                                <span class="cov0" title="0">ow = cw</span>
+                        }
+
+                        // Проверяем, что клиент отправляет сжатый контент
+                        <span class="cov0" title="0">contentEncoding := r.Header.Get("Content-Encoding")
+                        sendsGzip := strings.Contains(contentEncoding, "gzip")
+                        if sendsGzip </span><span class="cov0" title="0">{
+                                cr, err := newCompressReader(r.Body)
+                                if err != nil </span><span class="cov0" title="0">{
+                                        log.Sugar.Infow("failed to create compress reader", "error", err)
+                                        w.WriteHeader(http.StatusInternalServerError)
+                                        return
+                                }</span>
+                                <span class="cov0" title="0">defer func() </span><span class="cov0" title="0">{
+                                        if err := cr.Close(); err != nil </span><span class="cov0" title="0">{
+                                                log.Sugar.Infow("failed to close compress reader", "error", err)
+                                        }</span>
+                                }()
+                                <span class="cov0" title="0">r.Body = cr</span>
+                        }
+
+                        <span class="cov0" title="0">next.ServeHTTP(ow, r)</span>
+                }
+                <span class="cov0" title="0">return http.HandlerFunc(fn)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package middleware
+
+import (
+        "net/http"
+
+        "golang.org/x/time/rate"
+
+        "github.com/plasmatrip/avito_merch/internal/logger"
+)
+
+func WithLimitter(log logger.Logger) func(next http.Handler) http.Handler <span class="cov0" title="0">{
+        var limiter = rate.NewLimiter(rate.Limit(1100), 200)
+        return func(next http.Handler) http.Handler </span><span class="cov0" title="0">{
+                return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                        if !limiter.Allow() </span><span class="cov0" title="0">{
+                                log.Sugar.Infow("too many requests", "request", r.RequestURI)
+                                http.Error(w, "Too many requests", http.StatusTooManyRequests)
+                                return
+                        }</span>
+
+                        <span class="cov0" title="0">next.ServeHTTP(w, r)</span>
+                })
+        }
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package middleware
+
+import (
+        "net/http"
+        "time"
+
+        "github.com/plasmatrip/avito_merch/internal/logger"
+)
+
+type (
+        responseData struct {
+                status int
+                size   int
+        }
+
+        loggingResponseWriter struct {
+                http.ResponseWriter
+                responseData *responseData
+        }
+)
+
+func (r *loggingResponseWriter) Write(b []byte) (int, error) <span class="cov0" title="0">{
+        size, err := r.ResponseWriter.Write(b)
+        r.responseData.size += size
+        return size, err
+}</span>
+
+func (r *loggingResponseWriter) WriteHeader(status int) <span class="cov0" title="0">{
+        // r.ResponseWriter.WriteHeader(status)
+        r.responseData.status = status
+}</span>
+
+// WithLogging устанавливает логирование
+func WithLogging(log logger.Logger) func(next http.Handler) http.Handler <span class="cov0" title="0">{
+        log.Sugar.Debug("handler logging started")
+
+        return func(next http.Handler) http.Handler </span><span class="cov0" title="0">{
+
+                fn := func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                        start := time.Now()
+                        responseData := &amp;responseData{
+                                status: 0,
+                                size:   0,
+                        }
+                        lw := loggingResponseWriter{
+                                ResponseWriter: w,
+                                responseData:   responseData,
+                        }
+
+                        next.ServeHTTP(&amp;lw, r)
+
+                        duration := time.Since(start)
+
+                        var logMsg []interface{}
+
+                        switch r.Method </span>{
+                        case http.MethodGet:<span class="cov0" title="0">
+                                logMsg = append(logMsg, "URI", r.RequestURI, "  METHOD:", r.Method, "  DURATION:", duration, "  STATUS", responseData.status, "  SIZE", responseData.size)</span>
+                        case http.MethodPost:<span class="cov0" title="0">
+                                logMsg = append(logMsg, "URI", r.RequestURI, "  METHOD:", r.Method,
+                                        "  DURATION:", duration, "  STATUS", responseData.status, "  SIZE", responseData.size)</span>
+                        }
+
+                        <span class="cov0" title="0">log.Sugar.Infoln(logMsg...)</span>
+                }
+                <span class="cov0" title="0">return http.HandlerFunc(fn)</span>
+        }
+
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package config
+
+import (
+        "errors"
+        "fmt"
+        "os"
+        "path/filepath"
+        "time"
+
+        "github.com/caarlos0/env"
+        "github.com/joho/godotenv"
+)
+
+// константы таймаутов
+const (
+        readTimeout  = 5
+        writeTimeout = 10
+        idleTimeout  = 60
+)
+
+type Config struct {
+        Host         string `env:"RUN_ADDRESS"`  //адрес веб-сервера
+        Database     string `env:"DATABASE_URI"` //DSN базы данных
+        LogLevel     string `env:"LOG_LEVEL"`    //уровень логирования
+        TokenSecret  string `env:"TOKEN_SECRET"` //секретный ключ для JWT
+        ReadTimeout  time.Duration
+        WriteTimeout time.Duration
+        IdleTimeout  time.Duration
+}
+
+func LoadConfig() (*Config, error) <span class="cov0" title="0">{
+        cfg := &amp;Config{
+                ReadTimeout:  readTimeout * time.Second,
+                WriteTimeout: writeTimeout * time.Second,
+                IdleTimeout:  idleTimeout * time.Second,
+        }
+
+        ex, err := os.Executable()
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        //пытаемся загрузить .env файл
+        <span class="cov0" title="0">if err := godotenv.Load(filepath.Dir(ex) + "/.env"); err != nil </span><span class="cov0" title="0">{
+                return nil, errors.New(".env not found")
+        }</span>
+
+        // читаем переменные окружения, при ошибке прокидываем ее наверх
+        <span class="cov0" title="0">if err := env.Parse(cfg); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to read environment variable: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">if _, exist := os.LookupEnv("RUN_ADDRESS"); !exist </span><span class="cov0" title="0">{
+                return nil, errors.New("RUN_ADDRESS not found")
+        }</span>
+
+        <span class="cov0" title="0">if _, exist := os.LookupEnv("DATABASE_URI"); !exist </span><span class="cov0" title="0">{
+                return nil, errors.New("DATABASE_URI not found")
+        }</span>
+
+        <span class="cov0" title="0">if _, exist := os.LookupEnv("LOG_LEVEL"); !exist </span><span class="cov0" title="0">{
+                return nil, errors.New("LOG_LEVEL not found")
+        }</span>
+
+        <span class="cov0" title="0">if _, exist := os.LookupEnv("TOKEN_SECRET"); !exist </span><span class="cov0" title="0">{
+                return nil, errors.New("TOKEN_SECRET not found")
+        }</span>
+
+        <span class="cov0" title="0">return cfg, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package logger
+
+import "go.uber.org/zap"
+
+const (
+        LogLevelInfo  = "info"
+        LogLevelDebug = "debug"
+)
+
+type Logger struct {
+        zap   *zap.Logger
+        Sugar *zap.SugaredLogger
+}
+
+// NewLogger создает новый логгер
+func NewLogger(level string) (*Logger, error) <span class="cov10" title="2">{
+        var config zap.Config
+
+        config = zap.NewProductionConfig()
+        config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+        if level == LogLevelDebug </span><span class="cov10" title="2">{
+                config = zap.NewDevelopmentConfig()
+                config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+        }</span>
+
+        <span class="cov10" title="2">zap, err := config.Build()
+        zap.Sugar().Infow("logger initialized", "level", level)
+        return &amp;Logger{zap: zap, Sugar: zap.Sugar()}, err</span>
+}
+
+// Close закрывает логгер
+func (l *Logger) Close() <span class="cov0" title="0">{
+        l.zap.Sync()
+}</span>
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package router
+
+import (
+        "github.com/go-chi/chi/v5"
+        chimid "github.com/go-chi/chi/v5/middleware"
+        "github.com/plasmatrip/avito_merch/internal/api"
+        "github.com/plasmatrip/avito_merch/internal/api/middleware"
+        "github.com/plasmatrip/avito_merch/internal/config"
+        "github.com/plasmatrip/avito_merch/internal/logger"
+        "github.com/plasmatrip/avito_merch/internal/storage"
+)
+
+// NewRouter создает новый маршрутизатор
+func NewRouter(cfg config.Config, log logger.Logger, stor storage.Repository, api api.API) *chi.Mux <span class="cov0" title="0">{
+
+        r := chi.NewRouter()
+
+        r.Use(middleware.WithLogging(log), middleware.WithCompression(log), chimid.RedirectSlashes, middleware.WithLimitter(log))
+
+        r.Post("/api/auth", api.Auth)
+        r.Route("/api", func(r chi.Router) </span><span class="cov0" title="0">{
+                r.Use(middleware.WithAuthentication(log, cfg.TokenSecret))
+                r.Get("/info", api.Info)
+                r.Post("/sendCoin", api.SendCoin)
+                r.Get("/buy/{item}", api.Buy)
+        }</span>)
+
+        <span class="cov0" title="0">return r</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package db
+
+import (
+        "bytes"
+        "context"
+        "crypto/sha256"
+        "embed"
+        "encoding/hex"
+        "errors"
+        "fmt"
+        "time"
+
+        "github.com/gofrs/uuid"
+        "github.com/golang-migrate/migrate/v4"
+        _ "github.com/golang-migrate/migrate/v4/database/postgres"
+        "github.com/golang-migrate/migrate/v4/source/iofs"
+        "github.com/jackc/pgx/v5"
+        "github.com/jackc/pgx/v5/pgxpool"
+
+        "github.com/plasmatrip/avito_merch/internal/apperr"
+        "github.com/plasmatrip/avito_merch/internal/logger"
+        "github.com/plasmatrip/avito_merch/internal/model"
+
+        "github.com/plasmatrip/avito_merch/internal/storage/db/queries"
+)
+
+type DB interface {
+        Ping(ctx context.Context) error
+        UserAuth(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error)
+        BuyItem(ctx context.Context, userID uuid.UUID, item string) error
+        SendCoin(ctx context.Context, fromUser uuid.UUID, userSendCoin model.SendCoinRequest) error
+        Info(ctx context.Context, userID uuid.UUID) (model.InfoResponse, error)
+}
+
+type PostgresDB struct {
+        DB  *pgxpool.Pool
+        Log logger.Logger
+}
+
+func NewRepository(ctx context.Context, dsn string, log logger.Logger) (*PostgresDB, error) <span class="cov1" title="1">{
+        // запускаем миграцию
+        err := startMigration(dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                if !errors.Is(err, migrate.ErrNoChange) </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span> else<span class="cov0" title="0"> {
+                        log.Sugar.Debugw("the database exists, there is nothing to migrate")
+                }</span>
+        } else<span class="cov1" title="1"> {
+                log.Sugar.Debugw("database migration was successful")
+        }</span>
+
+        // открываем БД
+        <span class="cov1" title="1">db, err := pgxpool.New(ctx, dsn)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        // go generateUsers(db)
+        // go generateTransactions(db)
+        // go geratePurchases(db)
+
+        <span class="cov1" title="1">return &amp;PostgresDB{
+                DB:  db,
+                Log: log,
+        }, nil</span>
+}
+
+//go:embed migrations/*.sql
+var migrationsDir embed.FS
+
+// StartMigration запускает миграцию
+func startMigration(dsn string) error <span class="cov1" title="1">{
+        d, err := iofs.New(migrationsDir, "migrations")
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to return an iofs driver: %w", err)
+        }</span>
+
+        <span class="cov1" title="1">m, err := migrate.NewWithSourceInstance("iofs", d, dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("failed to get a new migrate instance: %w", err)
+        }</span>
+        <span class="cov1" title="1">if err := m.Up(); err != nil </span><span class="cov0" title="0">{
+                if !errors.Is(err, migrate.ErrNoChange) </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to apply migrations to the DB: %w", err)
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+        <span class="cov1" title="1">return nil</span>
+}
+
+// func generateTransactions(db *pgxpool.Pool) {
+//         from1, _ := uuid.FromString("114d785b-ad37-4288-a21a-731a61681c0c")
+//         from2, _ := uuid.FromString("d3794488-b427-4f60-bc85-7d58e34ab851")
+//         from3, _ := uuid.FromString("55e5dd08-f782-43da-8ed4-e96712245047")
+//         from4, _ := uuid.FromString("2cad6224-011d-42ef-acc1-4818680e2986")
+//         from5, _ := uuid.FromString("fdbb4088-3c63-4cef-a6eb-91ace3e935d4")
+
+//         froms := [5]uuid.UUID{from1, from2, from3, from4, from5}
+
+//         to1, _ := uuid.FromString("bf6a36b8-ed41-4f06-a36d-d3d73049a9b2")
+//         to2, _ := uuid.FromString("9eac4a66-91de-4d6d-ac30-b24e520abc39")
+//         to3, _ := uuid.FromString("e2d2ac49-63d8-4f74-82a2-158d6f8f824f")
+//         to4, _ := uuid.FromString("b30c374f-8c76-42b7-9e5a-cf362e29f0b3")
+//         to5, _ := uuid.FromString("73b2822a-63c7-4fee-a496-e9e9a0a35070")
+
+//         tos := [5]uuid.UUID{to1, to2, to3, to4, to5}
+
+//         r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+//         for i := 4; i &lt; 100000; i++ {
+//                 go func() {
+//                         _, _ = db.Exec(context.Background(), queries.InsertTransaction, pgx.NamedArgs{
+//                                 "from_user_id": froms[r.Intn(5)],
+//                                 "to_user_id":   tos[r.Intn(5)],
+//                                 "amount":       100,
+//                         })
+//                 }()
+//         }
+// }
+
+// func generateUsers(db *pgxpool.Pool) {
+//         for i := 4; i &lt; 100000; i++ {
+//                 go func() {
+//                         _, err := db.Exec(context.Background(), queries.InsertUser, pgx.NamedArgs{
+//                                 "date":     time.Now(),
+//                                 "login":    fmt.Sprintf("user%d", i),
+//                                 "password": "password",
+//                         })
+//                         if err != nil {
+//                                 fmt.Println(err)
+//                         }
+//                 }()
+
+//         }
+// }
+
+// func geratePurchases(db *pgxpool.Pool) {
+//         uuid1, _ := uuid.FromString("bf6a36b8-ed41-4f06-a36d-d3d73049a9b2")
+//         uuid2, _ := uuid.FromString("55e5dd08-f782-43da-8ed4-e96712245047")
+//         uuid3, _ := uuid.FromString("2cad6224-011d-42ef-acc1-4818680e2986")
+//         users := [3]uuid.UUID{uuid1, uuid2, uuid3}
+
+//         item1, _ := uuid.FromString("bfb785ce-8cac-4ab2-8ddf-084506b0c8ce")
+//         item2, _ := uuid.FromString("224eaee5-9256-4da1-9c20-90bd4732f244")
+//         item3, _ := uuid.FromString("35929711-366a-477d-8018-4dd6fe986aa4")
+//         item4, _ := uuid.FromString("4c6e4f99-6522-4081-bff0-3e4cb60a76d3")
+//         item5, _ := uuid.FromString("445efaa9-70e8-47e8-8f7f-4ab51e5fd5f8")
+//         item6, _ := uuid.FromString("b01f192e-27d5-4da8-9a7d-95c02e05b5f3")
+//         item7, _ := uuid.FromString("23e31eb4-c5b6-4ce0-9a59-9b73a6f85eb9")
+//         item8, _ := uuid.FromString("015a03cc-ec64-4273-9732-46b5dcbfa9fb")
+//         item9, _ := uuid.FromString("127c5d13-c488-4558-9e16-7d1393cf239b")
+//         item10, _ := uuid.FromString("dfaec662-c1b2-467d-b97c-0431792a59a7")
+
+//         items := [10]uuid.UUID{item1, item2, item3, item4, item5, item6, item7, item8, item9, item10}
+
+//         r := rand.New(rand.NewSource(time.Now().UnixNano()))
+//         for i := 0; i &lt; 100000; i++ {
+//                 go func() {
+//                         db.Exec(context.Background(), `INSERT INTO purchases (id, date, user_id, merch_id)
+//                         values (
+//                                 gen_random_uuid (),
+//                                 CURRENT_TIMESTAMP,
+//                                 @user_id,
+//                                 @merch_id
+//                         )`, pgx.NamedArgs{
+//                                 "user_id":  users[r.Intn(3)],
+//                                 "merch_id": items[r.Intn(10)],
+//                         })
+//                 }()
+//         }
+// }
+
+// Ping проверяет подключение к БД
+func (r PostgresDB) Ping(ctx context.Context) error <span class="cov1" title="1">{
+        return r.DB.Ping(ctx)
+}</span>
+
+// Close закрывает подключение к БД
+func (r PostgresDB) Close() <span class="cov0" title="0">{
+        r.DB.Close()
+}</span>
+
+// func (r PostgresDB) FindUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) {
+func (r PostgresDB) findUser(ctx context.Context, login model.AuthRequest) (uuid.UUID, error) <span class="cov10" title="8">{
+        var user model.AuthRequest
+        var userID uuid.UUID
+
+        err := r.DB.QueryRow(ctx, queries.SelectUser, pgx.NamedArgs{"login": login.UserName}).Scan(&amp;userID, &amp;user.UserName, &amp;user.Password)
+        if err != nil </span><span class="cov7" title="5">{
+                if !errors.Is(err, pgx.ErrNoRows) </span><span class="cov0" title="0">{
+                        return userID, apperr.ErrBadLogin
+                }</span>
+        }
+
+        <span class="cov10" title="8">savedHash, err := hex.DecodeString(user.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                return userID, err
+        }</span>
+
+        <span class="cov10" title="8">h := sha256.New()
+        h.Write([]byte([]byte(login.Password)))
+        hash := h.Sum(nil)
+
+        if user.UserName != login.UserName || !bytes.Equal(hash, savedHash) </span><span class="cov7" title="5">{
+                return userID, apperr.ErrBadLogin
+        }</span>
+
+        <span class="cov5" title="3">return userID, nil</span>
+}
+
+// UserAuth проверка аутентификационных данных, в случае отсутсвия пользователя - регистрация
+func (r PostgresDB) UserAuth(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error) <span class="cov10" title="8">{
+        userID, err := r.findUser(ctx, userLogin)
+        if err == nil </span><span class="cov5" title="3">{
+                return userID, nil
+        }</span>
+
+        <span class="cov7" title="5">h := sha256.New()
+        h.Write([]byte([]byte(userLogin.Password)))
+        hash := hex.EncodeToString(h.Sum(nil))
+
+        var id uuid.UUID
+
+        err = r.DB.QueryRow(ctx, queries.InsertUser, pgx.NamedArgs{
+                "date":     time.Now(),
+                "login":    userLogin.UserName,
+                "password": hash,
+        }).Scan(&amp;id)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return uuid.Nil, err
+        }</span>
+
+        <span class="cov7" title="5">return id, nil</span>
+}
+
+// BuyItem обработка запороса покупки мерча
+func (r PostgresDB) BuyItem(ctx context.Context, userID uuid.UUID, item string) error <span class="cov5" title="3">{
+        var item_id uuid.UUID
+        var item_price int
+
+        err := r.DB.QueryRow(ctx, queries.SelectItem, pgx.NamedArgs{
+                "item_name": item,
+        }).Scan(&amp;item_id, &amp;item_price)
+        if err != nil </span><span class="cov1" title="1">{
+                if err == pgx.ErrNoRows </span><span class="cov1" title="1">{
+                        return apperr.ErrItemNotFound
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+
+        <span class="cov4" title="2">var user_anount int
+        err = r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+                "user_id": userID,
+        }).Scan(&amp;user_anount)
+        if err != nil </span><span class="cov0" title="0">{
+                if err == pgx.ErrNoRows </span><span class="cov0" title="0">{
+                        return apperr.ErrAccountNotFound
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+
+        <span class="cov4" title="2">if user_anount &lt; item_price </span><span class="cov0" title="0">{
+                return apperr.ErrInsufficientFunds
+        }</span>
+
+        <span class="cov4" title="2">ct, err := r.DB.Exec(ctx, queries.BuyItem, pgx.NamedArgs{
+                "user_id":   userID,
+                "item_name": item,
+                "price":     item_price,
+                "merch_id":  item_id,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov4" title="2">if ct.RowsAffected() == 0 </span><span class="cov0" title="0">{
+                return apperr.ErrMerchNotBought
+        }</span>
+
+        <span class="cov4" title="2">return nil</span>
+}
+
+// SendCoin обработка запороса отправки монет
+func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin model.SendCoinRequest) error <span class="cov9" title="7">{
+        var user_anount int
+
+        //проверяем наличие счета отправителя
+        err := r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+                "user_id": fromUser,
+        }).Scan(&amp;user_anount)
+        if err != nil </span><span class="cov1" title="1">{
+                if err == pgx.ErrNoRows </span><span class="cov1" title="1">{
+                        return apperr.ErrSenderNotFound
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+
+        // проверяем баланс у отправителя
+        <span class="cov8" title="6">if user_anount &lt; sendCoin.Amount </span><span class="cov1" title="1">{
+                return apperr.ErrInsufficientFunds
+        }</span>
+
+        <span class="cov7" title="5">var toUser uuid.UUID
+        //проверяем наличие счета получателя
+        err = r.DB.QueryRow(ctx, queries.SelectUserID, pgx.NamedArgs{
+                "login": sendCoin.ToUser,
+        }).Scan(&amp;toUser)
+        if err != nil </span><span class="cov1" title="1">{
+                if err == pgx.ErrNoRows </span><span class="cov1" title="1">{
+                        return apperr.ErrRecipientNotFound
+                }</span>
+                <span class="cov0" title="0">return err</span>
+        }
+
+        // проверяем, что отправитель и получатель не один пользователь
+        <span class="cov7" title="4">if fromUser == toUser </span><span class="cov1" title="1">{
+                return apperr.ErrSenderAndRecipientAreTheSame
+        }</span>
+
+        // начинаем транзакцию
+        <span class="cov5" title="3">tx, err := r.DB.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted, AccessMode: pgx.ReadWrite})
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // при ошибке коммита откатываем назад
+        <span class="cov5" title="3">defer func() error </span><span class="cov5" title="3">{
+                return tx.Rollback(ctx)
+        }</span>()
+
+        // обновляем монеты у отправителя
+        <span class="cov5" title="3">_, err = tx.Exec(ctx, queries.UpdateCoin, pgx.NamedArgs{
+                "user_id": fromUser,
+                "amount":  -sendCoin.Amount,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // обновляем монеты у получателя
+        <span class="cov5" title="3">_, err = tx.Exec(ctx, queries.UpdateCoin, pgx.NamedArgs{
+                "user_id": toUser,
+                "amount":  sendCoin.Amount,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        // записываем информацию о транзакции
+        <span class="cov5" title="3">_, err = tx.Exec(ctx, queries.InsertTransaction, pgx.NamedArgs{
+                "from_user_id": fromUser,
+                "to_user_id":   toUser,
+                "amount":       sendCoin.Amount,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov5" title="3">err = tx.Commit(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov5" title="3">return nil</span>
+}
+
+// Info возвращает информацию о монетах, инвентаре и истории транзакций
+func (r PostgresDB) Info(ctx context.Context, userID uuid.UUID) (model.InfoResponse, error) <span class="cov4" title="2">{
+        var infoResponse model.InfoResponse
+
+        //проверяем наличие счета пользователя
+        err := r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
+                "user_id": userID,
+        }).Scan(&amp;infoResponse.Coins)
+        if err != nil </span><span class="cov1" title="1">{
+                if err == pgx.ErrNoRows </span><span class="cov1" title="1">{
+                        return infoResponse, apperr.ErrAccountNotFound
+                }</span>
+                <span class="cov0" title="0">return model.InfoResponse{}, err</span>
+        }
+
+        //получаем купленный мерч
+        <span class="cov1" title="1">rows, err := r.DB.Query(ctx, queries.SelectPurchases, pgx.NamedArgs{
+                "user_id": userID,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return model.InfoResponse{}, err
+        }</span>
+
+        <span class="cov1" title="1">infoResponse.Inventory = make([]model.Inventory, 0, rows.CommandTag().RowsAffected())
+        for rows.Next() </span><span class="cov1" title="1">{
+                inventory := model.Inventory{}
+
+                err := rows.Scan(
+                        &amp;inventory.Type,
+                        &amp;inventory.Quantity,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return model.InfoResponse{}, err
+                }</span>
+
+                <span class="cov1" title="1">infoResponse.Inventory = append(infoResponse.Inventory, inventory)</span>
+        }
+        <span class="cov1" title="1">rows.Close()
+
+        // получаем историю транзакций
+        rows, err = r.DB.Query(ctx, queries.SelectTransactions, pgx.NamedArgs{
+                "user_id": userID,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                return model.InfoResponse{}, err
+        }</span>
+
+        <span class="cov1" title="1">for rows.Next() </span><span class="cov4" title="2">{
+                transaction := model.Transaction{}
+
+                err := rows.Scan(
+                        &amp;transaction.Login,
+                        &amp;transaction.Amount,
+                        &amp;transaction.Type,
+                )
+                if err != nil </span><span class="cov0" title="0">{
+                        return model.InfoResponse{}, err
+                }</span>
+
+                <span class="cov4" title="2">if transaction.Type == "sent" </span><span class="cov1" title="1">{
+                        infoResponse.CoinHistory.Sent = append(infoResponse.CoinHistory.Sent, model.Sent{
+                                ToUser: transaction.Login,
+                                Amount: transaction.Amount,
+                        })
+                }</span> else<span class="cov1" title="1"> {
+                        infoResponse.CoinHistory.Received = append(infoResponse.CoinHistory.Received, model.Received{
+                                FromUser: transaction.Login,
+                                Amount:   transaction.Amount,
+                        })
+                }</span>
+        }
+
+        <span class="cov1" title="1">return infoResponse, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

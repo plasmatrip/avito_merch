@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/plasmatrip/avito_merch/internal/api/handlers"
+	"github.com/plasmatrip/avito_merch/internal/apperr"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/model"
 )
@@ -18,14 +19,14 @@ func WithAuthentication(log logger.Logger, tokenSecret string) func(next http.Ha
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
 				log.Sugar.Info("missing authorization header")
-				handlers.SendErrors(w, "missing authorization header", http.StatusUnauthorized)
+				handlers.SendErrors(w, apperr.ErrMissingAuthorizationHeader)
 				return
 			}
 
 			parts := strings.Split(authHeader, " ")
 			if len(parts) != 2 || parts[0] != "Bearer" {
 				log.Sugar.Infow("invalid authorization header format", "parts", parts)
-				handlers.SendErrors(w, "invalid authorization header format", http.StatusUnauthorized)
+				handlers.SendErrors(w, apperr.ErrInvalidAuthorizationHeader)
 				return
 			}
 
@@ -43,13 +44,13 @@ func WithAuthentication(log logger.Logger, tokenSecret string) func(next http.Ha
 
 			if err != nil {
 				log.Sugar.Infow("JWT token error", "error", err)
-				handlers.SendErrors(w, "JWT token error", http.StatusUnauthorized)
+				handlers.SendErrors(w, apperr.ErrJWTTotkenError)
 				return
 			}
 
 			if !token.Valid {
 				log.Sugar.Infow("invalid token", "token", token)
-				handlers.SendErrors(w, "invalid token", http.StatusUnauthorized)
+				handlers.SendErrors(w, apperr.ErrInvalidToken)
 				return
 			}
 

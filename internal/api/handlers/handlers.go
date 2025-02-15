@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/plasmatrip/avito_merch/internal/apperr"
 	"github.com/plasmatrip/avito_merch/internal/config"
 	"github.com/plasmatrip/avito_merch/internal/logger"
 	"github.com/plasmatrip/avito_merch/internal/model"
@@ -24,9 +25,18 @@ func NewHandlers(cfg config.Config, l logger.Logger, db storage.Repository) *Han
 	}
 }
 
-func SendErrors(w http.ResponseWriter, error string, statusCode int) {
+func SendErrors(w http.ResponseWriter, err error) {
+	msg, ok := apperr.ErrorMessages[err]
+	if !ok {
+		msg = "internal error"
+	}
+	statusCode, ok := apperr.ErrorStatuses[err]
+	if !ok {
+		statusCode = http.StatusInternalServerError
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	errResponse := model.ErrorResponse{Errors: error}
+	errResponse := model.ErrorResponse{Errors: msg}
 	jsoniter.NewEncoder(w).Encode(errResponse)
 }

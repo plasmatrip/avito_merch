@@ -1,13 +1,13 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -24,8 +24,6 @@ import (
 	"github.com/plasmatrip/avito_merch/internal/storage/db/queries"
 )
 
-//go:generate mockgen -source=db.go -destination=mock/dbmock.go
-
 type DB interface {
 	Ping(ctx context.Context) error
 	UserAuth(ctx context.Context, userLogin model.AuthRequest) (uuid.UUID, error)
@@ -35,8 +33,7 @@ type DB interface {
 }
 
 type PostgresDB struct {
-	DB PgxPool
-	// DB  *pgxpool.Pool
+	DB  *pgxpool.Pool
 	Log logger.Logger
 }
 
@@ -59,10 +56,6 @@ func NewRepository(ctx context.Context, dsn string, log logger.Logger) (*Postgre
 	if err != nil {
 		return nil, err
 	}
-
-	// go generateUsers(db)
-	// go generateTransactions(db)
-	// go geratePurchases(db)
 
 	return &PostgresDB{
 		DB:  db,
@@ -93,88 +86,6 @@ func startMigration(dsn string) error {
 	return nil
 }
 
-func generateTransactions(db *pgxpool.Pool) {
-	from1, _ := uuid.FromString("114d785b-ad37-4288-a21a-731a61681c0c")
-	from2, _ := uuid.FromString("d3794488-b427-4f60-bc85-7d58e34ab851")
-	from3, _ := uuid.FromString("55e5dd08-f782-43da-8ed4-e96712245047")
-	from4, _ := uuid.FromString("2cad6224-011d-42ef-acc1-4818680e2986")
-	from5, _ := uuid.FromString("fdbb4088-3c63-4cef-a6eb-91ace3e935d4")
-
-	froms := [5]uuid.UUID{from1, from2, from3, from4, from5}
-
-	to1, _ := uuid.FromString("bf6a36b8-ed41-4f06-a36d-d3d73049a9b2")
-	to2, _ := uuid.FromString("9eac4a66-91de-4d6d-ac30-b24e520abc39")
-	to3, _ := uuid.FromString("e2d2ac49-63d8-4f74-82a2-158d6f8f824f")
-	to4, _ := uuid.FromString("b30c374f-8c76-42b7-9e5a-cf362e29f0b3")
-	to5, _ := uuid.FromString("73b2822a-63c7-4fee-a496-e9e9a0a35070")
-
-	tos := [5]uuid.UUID{to1, to2, to3, to4, to5}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-
-	for i := 4; i < 100000; i++ {
-		go func() {
-			_, _ = db.Exec(context.Background(), queries.InsertTransaction, pgx.NamedArgs{
-				"from_user_id": froms[r.Intn(5)],
-				"to_user_id":   tos[r.Intn(5)],
-				"amount":       100,
-			})
-		}()
-	}
-}
-
-func generateUsers(db *pgxpool.Pool) {
-	for i := 4; i < 100000; i++ {
-		go func() {
-			_, err := db.Exec(context.Background(), queries.InsertUser, pgx.NamedArgs{
-				"date":     time.Now(),
-				"login":    fmt.Sprintf("user%d", i),
-				"password": "password",
-			})
-			if err != nil {
-				fmt.Println(err)
-			}
-		}()
-
-	}
-}
-
-func geratePurchases(db *pgxpool.Pool) {
-	uuid1, _ := uuid.FromString("bf6a36b8-ed41-4f06-a36d-d3d73049a9b2")
-	uuid2, _ := uuid.FromString("55e5dd08-f782-43da-8ed4-e96712245047")
-	uuid3, _ := uuid.FromString("2cad6224-011d-42ef-acc1-4818680e2986")
-	users := [3]uuid.UUID{uuid1, uuid2, uuid3}
-
-	item1, _ := uuid.FromString("bfb785ce-8cac-4ab2-8ddf-084506b0c8ce")
-	item2, _ := uuid.FromString("224eaee5-9256-4da1-9c20-90bd4732f244")
-	item3, _ := uuid.FromString("35929711-366a-477d-8018-4dd6fe986aa4")
-	item4, _ := uuid.FromString("4c6e4f99-6522-4081-bff0-3e4cb60a76d3")
-	item5, _ := uuid.FromString("445efaa9-70e8-47e8-8f7f-4ab51e5fd5f8")
-	item6, _ := uuid.FromString("b01f192e-27d5-4da8-9a7d-95c02e05b5f3")
-	item7, _ := uuid.FromString("23e31eb4-c5b6-4ce0-9a59-9b73a6f85eb9")
-	item8, _ := uuid.FromString("015a03cc-ec64-4273-9732-46b5dcbfa9fb")
-	item9, _ := uuid.FromString("127c5d13-c488-4558-9e16-7d1393cf239b")
-	item10, _ := uuid.FromString("dfaec662-c1b2-467d-b97c-0431792a59a7")
-
-	items := [10]uuid.UUID{item1, item2, item3, item4, item5, item6, item7, item8, item9, item10}
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < 100000; i++ {
-		go func() {
-			db.Exec(context.Background(), `INSERT INTO purchases (id, date, user_id, merch_id)
-			values (
-				gen_random_uuid (),
-				CURRENT_TIMESTAMP,
-				@user_id,
-				@merch_id
-			)`, pgx.NamedArgs{
-				"user_id":  users[r.Intn(3)],
-				"merch_id": items[r.Intn(10)],
-			})
-		}()
-	}
-}
-
 // Ping проверяет подключение к БД
 func (r PostgresDB) Ping(ctx context.Context) error {
 	return r.DB.Ping(ctx)
@@ -197,19 +108,18 @@ func (r PostgresDB) findUser(ctx context.Context, login model.AuthRequest) (uuid
 		}
 	}
 
-	// TODO: восстановление пароля
-	// savedHash, err := hex.DecodeString(user.Password)
-	// if err != nil {
-	// 	return userID, err
-	// }
+	savedHash, err := hex.DecodeString(user.Password)
+	if err != nil {
+		return userID, err
+	}
 
-	// h := sha256.New()
-	// h.Write([]byte([]byte(login.Password)))
-	// hash := h.Sum(nil)
+	h := sha256.New()
+	h.Write([]byte([]byte(login.Password)))
+	hash := h.Sum(nil)
 
-	// if user.UserName != login.UserName || !bytes.Equal(hash, savedHash) {
-	// 	return userID, apperr.ErrBadLogin
-	// }
+	if user.UserName != login.UserName || !bytes.Equal(hash, savedHash) {
+		return userID, apperr.ErrBadLogin
+	}
 
 	return userID, nil
 }
@@ -375,7 +285,7 @@ func (r PostgresDB) SendCoin(ctx context.Context, fromUser uuid.UUID, sendCoin m
 func (r PostgresDB) Info(ctx context.Context, userID uuid.UUID) (model.InfoResponse, error) {
 	var infoResponse model.InfoResponse
 
-	//проверяем наличие счета отправителя
+	//проверяем наличие счета пользователя
 	err := r.DB.QueryRow(ctx, queries.SelectAccount, pgx.NamedArgs{
 		"user_id": userID,
 	}).Scan(&infoResponse.Coins)
